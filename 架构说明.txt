@@ -1,0 +1,63 @@
+d:\高校学生信息管理系统\
+│
+├── backend/                          # 后端(C++ Drogon) —— A/B/C 负责
+│   ├── config/                       # 配置文件
+│   │   └── app.json
+│   ├── controllers/                  # 控制器层(HTTP接口)
+│   │   ├── AuthController.cpp        # 登录认证(A)
+│   │   ├── StudentController.cpp     # 学生管理(B)
+│   │   ├── TeacherController.cpp     # 教师管理(B)
+│   │   ├── DeptController.cpp        # 院系班级管理(B)
+│   │   ├── CourseController.cpp      # 课程管理(C)
+│   │   ├── ScoreController.cpp       # 成绩管理(C)
+│   │   ├── NoticeController.cpp      # 通知公告(C)
+│   │   └── UserController.cpp        # 个人中心(A)
+│   ├── filters/                      # 过滤器(JWT鉴权)
+│   │   └── JwtFilter.cpp             # (A)
+│   ├── structures/                   # 手写数据结构层(课设核心,A)
+│   │   ├── SeqList.h
+│   │   ├── LinkedList.h
+│   │   ├── Mystack.h
+│   │   └── MyQueue.h
+│   ├── services/                     # 业务逻辑层(B/C)
+│   ├── models/                       # 数据模型(ORM实体)
+│   ├── utils/                        # 工具类
+│   ├── CMakeLists.txt                # 构建配置(A)
+│   └── main.cpp                      # 入口(A)
+│
+├── frontend/                         # 前端(Vue3) —— D/E/F 负责
+│   ├── public/                       # 静态资源
+│   ├── src/
+│   │   ├── api/                      # API请求封装(D)
+│   │   ├── assets/                   # 图片/字体
+│   │   ├── components/               # 公共组件
+│   │   ├── layouts/                  # 布局组件(D)
+│   │   ├── router/                   # 路由(D)
+│   │   ├── stores/                   # Pinia状态管理(D)
+│   │   ├── utils/                    # 工具函数
+│   │   ├── views/                    # 页面
+│   │   │   ├── login/                # 登录页(D)
+│   │   │   ├── admin/                # 管理员页面(E)
+│   │   │   ├── teacher/              # 教师页面(F)
+│   │   │   └── student/              # 学生页面(F)
+│   │   ├── App.vue
+│   │   └── main.js
+│   ├── index.html
+│   ├── vite.config.js
+│   └── package.json
+│
+├── docs/                             # 文档
+│   ├── api.md                        # 接口文档(A维护)
+│   └── db/
+│       └── init.sql
+│
+├── tests/                            # 测试
+│   ├── backend/
+│   └── frontend/
+│
+├── scripts/                          # 构建/部署脚本
+│   └── build.bat
+│
+├── 需求分析.md
+├── 技术选型.md
+└── 数据库E-R图.drawio
