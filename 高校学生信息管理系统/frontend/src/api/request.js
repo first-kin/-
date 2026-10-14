@@ -17,7 +17,16 @@ request.interceptors.response.use((response) => {
   if (result.code !== 0) {
     return Promise.reject(new Error(result.msg || '请求失败'))
   }
-
   return result.data
+}, (error) => {
+  if (error.response?.status === 401) {
+    localStorage.removeItem('token')
+
+    if (window.location.pathname !== '/login') {
+      window.location.replace('/login')
+    }
+  }
+
+  return Promise.reject(error)
 })
 export default request

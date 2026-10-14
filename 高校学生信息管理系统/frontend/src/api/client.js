@@ -6,6 +6,13 @@ http.interceptors.request.use(config => {
   return config
 })
 http.interceptors.response.use(res => res.data, error => {
+    if (error.response?.status === 401) {
+    localStorage.removeItem('token')
+
+    if (window.location.pathname !== '/login') {
+      window.location.replace('/login')
+    }
+  }
   const message = error?.response?.data?.msg || error.message || '请求失败'
   return Promise.reject(new Error(message))
 })
