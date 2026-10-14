@@ -107,7 +107,7 @@ button {
 
 .message {
   margin-bottom: 0;
-  color: #67c23a;
+  color: #f56c6c;
   text-align: center;
 }
 </style>
