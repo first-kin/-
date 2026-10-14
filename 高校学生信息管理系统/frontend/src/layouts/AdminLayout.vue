@@ -6,7 +6,7 @@
     </header>
 <nav>
   <RouterLink to="/admin">管理员首页</RouterLink>
-  <RouterLink to="/student">课程、成绩与个人中心</RouterLink>
+ 
 </nav>
     <main>
       <RouterView />
@@ -20,6 +20,7 @@ const router = useRouter()
 
 function handleLogout() {
   localStorage.removeItem('token')
+localStorage.removeItem('role')
   router.replace('/login')
 }
 </script>

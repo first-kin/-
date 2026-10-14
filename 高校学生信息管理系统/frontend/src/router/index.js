@@ -12,12 +12,12 @@ const router = createRouter({
     {
   path: '/student',
   component: StudentView,
-  meta: { requiresAuth: true },
+ meta: { requiresAuth: true, roles: ['student'] },
 },
     {
       path: '/admin',
       component: AdminLayout,
-      meta: { requiresAuth: true },
+     meta: { requiresAuth: true, roles: ['admin'] },
       children: [
         { path: '', component: AdminHome },
       ],
@@ -26,8 +26,15 @@ const router = createRouter({
 })
 router.beforeEach((to) => {
   const token = localStorage.getItem('token')
+  const role = localStorage.getItem('role')
 
   if (to.meta.requiresAuth && !token) {
+    return '/login'
+  }
+
+  if (to.meta.roles && !to.meta.roles.includes(role)) {
+    if (role === 'admin') return '/admin'
+    if (role === 'student') return '/student'
     return '/login'
   }
 })

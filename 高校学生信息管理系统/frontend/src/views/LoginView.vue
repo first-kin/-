@@ -68,6 +68,7 @@ loading.value = true
     }
 
     localStorage.setItem('token', result.token)
+    localStorage.setItem('role', result.role)
     message.value = ''
     await router.replace(target)
     } catch (error) {
