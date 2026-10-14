@@ -9,7 +9,11 @@ const router = createRouter({
   routes: [
     { path: '/', redirect: '/login' },
     { path: '/login', component: LoginView },
-    { path: '/student', component: StudentView },
+    {
+  path: '/student',
+  component: StudentView,
+  meta: { requiresAuth: true },
+},
     {
       path: '/admin',
       component: AdminLayout,
