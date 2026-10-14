@@ -15,7 +15,9 @@
           <input v-model="password" type="password" placeholder="请输入密码" />
         </label>
 
-        <button type="submit">登录</button>
+        <button type="submit" :disabled="loading">
+  {{ loading ? '正在登录…' : '登录' }}
+</button>
 
         <p v-if="message" class="message">{{ message }}</p>
       </form>
@@ -25,18 +27,56 @@
 
 <script setup>
 import { ref } from 'vue'
+import { login } from '../api/auth'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const username = ref('')
 const password = ref('')
 const message = ref('')
-
-function handleLogin() {
-  if (!username.value || !password.value) {
+const loading = ref(false)
+async function handleLogin() {
+    if (loading.value) return
+  if (!username.value.trim() || !password.value) {
     message.value = '请输入用户名和密码'
     return
   }
+loading.value = true
+  message.value = '正在登录，请稍候……'
 
- message.value = '登录接口尚未接入，请稍后再试'
+  try {
+    const result = await login(username.value.trim(), password.value)
+
+    if (!result?.token) {
+      message.value = '登录接口未返回凭证，请联系后端同学'
+      return
+    }
+
+    const pages = {
+      admin: '/admin',
+      student: '/student'
+    }
+
+    const target = pages[result.role]
+
+    if (!target) {
+      message.value = result.role === 'teacher'
+        ? '教师页面尚未完成，暂时无法进入'
+        : '登录接口返回的角色无法识别'
+      return
+    }
+
+    localStorage.setItem('token', result.token)
+    message.value = ''
+    await router.replace(target)
+    } catch (error) {
+    message.value = error.response?.status === 500
+      ? '登录服务暂时异常，请联系后端同学检查'
+      : error.message || '登录失败，请稍后重试'
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
