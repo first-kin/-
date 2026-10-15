@@ -7,6 +7,7 @@ import ModulePending from '../views/ModulePending.vue'
 import AdminStudents from '../views/AdminStudents.vue'
 import AdminTeachers from '../views/AdminTeachers.vue'
 import AdminOrganization from '../views/AdminOrganization.vue'
+import AcademicModule from '../views/AcademicModule.vue'
 import { homeForRole, useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -24,6 +25,9 @@ const router = createRouter({
         { path: 'students', component: AdminStudents },
         { path: 'teachers', component: AdminTeachers },
         { path: 'organization', component: AdminOrganization },
+        { path: 'courses', component: AcademicModule, props: { section: 'courses' } },
+        { path: 'scores', component: AcademicModule, props: { section: 'scores' } },
+        { path: 'profile', component: AcademicModule, props: { section: 'profile' } },
       ],
     },
     {
@@ -31,7 +35,12 @@ const router = createRouter({
       component: AdminLayout,
       props: { homePath: '/teacher', sectionTitle: '教师首页' },
       meta: { requiresAuth: true, roles: ['teacher'] },
-      children: [{ path: '', component: ModulePending }],
+      children: [
+        { path: '', component: ModulePending },
+        { path: 'courses', component: AcademicModule, props: { section: 'courses' } },
+        { path: 'scores', component: AcademicModule, props: { section: 'scores' } },
+        { path: 'profile', component: AcademicModule, props: { section: 'profile' } },
+      ],
     },
     {
       path: '/student',
