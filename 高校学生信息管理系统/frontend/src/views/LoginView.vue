@@ -3,23 +3,22 @@
     <section class="login-card">
       <h1>高校学生信息管理系统</h1>
       <p class="subtitle">请登录后继续</p>
+      <p v-if="demoMode" class="demo-hint">演示模式：demo-admin、demo-teacher 或 demo-student，密码 123456</p>
 
       <form @submit.prevent="handleLogin">
         <label>
           用户名
-          <input v-model="username" type="text" placeholder="请输入用户名" />
+          <input v-model="username" type="text" autocomplete="username" placeholder="请输入用户名" />
         </label>
 
         <label>
           密码
-          <input v-model="password" type="password" placeholder="请输入密码" />
+          <input v-model="password" type="password" autocomplete="current-password" placeholder="请输入密码" />
         </label>
 
-        <button type="submit" :disabled="loading">
-  {{ loading ? '正在登录…' : '登录' }}
-</button>
+        <button type="submit" :disabled="loading">{{ loading ? '正在登录…' : '登录' }}</button>
 
-        <p v-if="message" class="message">{{ message }}</p>
+        <p v-if="message" class="message" role="alert">{{ message }}</p>
       </form>
     </section>
   </main>
@@ -28,53 +27,40 @@
 <script setup>
 import { ref } from 'vue'
 import { login } from '../api/auth'
+import { useAuthStore, homeForRole } from '../stores/auth'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const auth = useAuthStore()
+const demoMode = import.meta.env.DEV && import.meta.env.VITE_MOCK_AUTH === 'true' && import.meta.env.VITE_USE_MOCK !== 'false'
 
 const username = ref('')
 const password = ref('')
 const message = ref('')
 const loading = ref(false)
 async function handleLogin() {
-    if (loading.value) return
+  if (loading.value) return
   if (!username.value.trim() || !password.value) {
     message.value = '请输入用户名和密码'
     return
   }
-loading.value = true
-  message.value = '正在登录，请稍候……'
+  loading.value = true
+  message.value = ''
 
   try {
     const result = await login(username.value.trim(), password.value)
 
-    if (!result?.token) {
-      message.value = '登录接口未返回凭证，请联系后端同学'
-      return
-    }
-
-    const pages = {
-      admin: '/admin',
-      student: '/student'
-    }
-
-    const target = pages[result.role]
-
-    if (!target) {
-      message.value = result.role === 'teacher'
-        ? '教师页面尚未完成，暂时无法进入'
-        : '登录接口返回的角色无法识别'
-      return
-    }
-
-    localStorage.setItem('token', result.token)
-    localStorage.setItem('role', result.role)
+    auth.setSession(result)
+    const requestedTarget = typeof router.currentRoute.value.query.redirect === 'string'
+      ? router.currentRoute.value.query.redirect
+      : ''
+    const target = requestedTarget.startsWith('/') && !requestedTarget.startsWith('//')
+      ? requestedTarget
+      : homeForRole(result.role)
     message.value = ''
     await router.replace(target)
-    } catch (error) {
-    message.value = error.response?.status === 500
-      ? '登录服务暂时异常，请联系后端同学检查'
-      : error.message || '登录失败，请稍后重试'
+  } catch (error) {
+    message.value = error.message || '登录失败，请稍后重试'
   } finally {
     loading.value = false
   }
@@ -118,6 +104,16 @@ h1 {
   margin: 12px 0 28px;
   color: #909399;
   text-align: center;
+}
+
+.demo-hint {
+  margin: -12px 0 22px;
+  padding: 10px;
+  border-radius: 6px;
+  background: #ecf5ff;
+  color: #426188;
+  line-height: 1.5;
+  font-size: 12px;
 }
 
 label {

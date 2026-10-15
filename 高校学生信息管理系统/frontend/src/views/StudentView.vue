@@ -9,7 +9,7 @@
     <div class="sidebar-bottom"><div class="help-icon">?</div><span v-if="!collapsed">需要帮助？</span></div>
   </aside>
   <main class="main-area">
-    <header class="topbar"><div class="breadcrumb">工作台 <span>/</span> {{currentTitle}}</div><div class="top-actions"><span class="term-tag">2026-2027 学年 · 第一学期</span><button class="icon-button" title="通知">♧<i></i></button><div class="user-mini"><div class="avatar">夏</div><div><b>夏同学</b><small>学生账户</small></div><span>⌄</span></div></div></header>
+    <header class="topbar"><div class="breadcrumb">工作台 <span>/</span> {{currentTitle}}</div><div class="top-actions"><span class="term-tag">2026-2027 学年 · 第一学期</span><button class="icon-button" title="通知">♧<i></i></button><div class="user-mini"><div class="avatar">夏</div><div><b>夏同学</b><small>学生账户</small></div><span>⌄</span></div><button class="logout-button" type="button" @click="handleLogout">退出登录</button></div></header>
     <section class="page-content">
       <template v-if="active==='courses'">
         <div class="page-heading"><div><div class="eyebrow">ACADEMIC SERVICES</div><h1>课程管理</h1><p>查看当前学期课程安排，快速掌握课程信息与上课地点。</p></div><el-button type="primary" plain @click="exportCourses">导出课程表 ↗</el-button></div>
@@ -64,8 +64,19 @@
 </template>
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../api'
+import { logout } from '../api/auth'
+import { useAuthStore } from '../stores/auth'
+const router = useRouter()
+const auth = useAuthStore()
+function handleLogout() {
+  const token = auth.token
+  auth.clearSession()
+  void logout(token).catch(() => {})
+  void router.replace('/login')
+}
 const menus=[{key:'courses',label:'课程管理',icon:'▤'},{key:'scores',label:'成绩管理',icon:'▥'},{key:'profile',label:'个人中心',icon:'♙'}]
 const active=ref('courses'),collapsed=ref(false),courseList=ref([]),scoreList=ref([]),profile=reactive({}),saving=ref(false),changing=ref(false)
 const currentTitle=computed(()=>menus.find(m=>m.key===active.value)?.label||'工作台')
@@ -97,3 +108,22 @@ async function changePassword(){if(!passwordForm.oldPassword||!passwordForm.newP
 watch([courseKeyword,courseStatus],()=>page.value=1)
 onMounted(load)
 </script>
+
+<style scoped>
+.logout-button {
+  border: 1px solid #e3e7f0;
+  border-radius: 7px;
+  padding: 7px 11px;
+  background: #fff;
+  color: #667188;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.logout-button:hover {
+  border-color: #596ce8;
+  background: #f7f8ff;
+  color: #596ce8;
+}
+</style>

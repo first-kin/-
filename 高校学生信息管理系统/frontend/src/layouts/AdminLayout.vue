@@ -1,11 +1,14 @@
 <template>
   <div>
     <header>
-      <h2>高校学生信息管理系统</h2>
+      <div>
+        <h2>高校学生信息管理系统</h2>
+        <small>{{ sectionTitle }}</small>
+      </div>
       <button type="button" @click="handleLogout">退出登录</button>
     </header>
 <nav>
-  <RouterLink to="/admin">管理员首页</RouterLink>
+  <RouterLink :to="homePath">{{ sectionTitle }}</RouterLink>
  
 </nav>
     <main>
@@ -15,13 +18,21 @@
 </template>
 <script setup>
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+import { logout } from '../api/auth'
 
 const router = useRouter()
+const auth = useAuthStore()
+defineProps({
+  homePath: { type: String, default: '/admin' },
+  sectionTitle: { type: String, default: '管理员首页' },
+})
 
 function handleLogout() {
-  localStorage.removeItem('token')
-localStorage.removeItem('role')
-  router.replace('/login')
+  const token = auth.token
+  auth.clearSession()
+  void logout(token).catch(() => {})
+  void router.replace('/login')
 }
 </script>
 <style scoped>
@@ -36,6 +47,12 @@ header {
 
 header h2 {
   margin: 0;
+}
+
+header small {
+  display: block;
+  margin-top: 4px;
+  opacity: 0.8;
 }
 
 main {
