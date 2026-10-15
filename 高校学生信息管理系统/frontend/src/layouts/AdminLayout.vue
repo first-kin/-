@@ -13,6 +13,14 @@
         <RouterLink to="/admin/students">学生管理</RouterLink>
         <RouterLink to="/admin/teachers">教师管理</RouterLink>
         <RouterLink to="/admin/organization">院系/班级</RouterLink>
+        <RouterLink to="/admin/courses">课程管理</RouterLink>
+        <RouterLink to="/admin/scores">成绩管理</RouterLink>
+        <RouterLink to="/admin/profile">个人中心</RouterLink>
+      </template>
+      <template v-else-if="homePath === '/teacher'">
+        <RouterLink to="/teacher/courses">课程管理</RouterLink>
+        <RouterLink to="/teacher/scores">成绩管理</RouterLink>
+        <RouterLink to="/teacher/profile">个人中心</RouterLink>
       </template>
     </nav>
     <main>
@@ -40,6 +48,12 @@ const currentSectionTitle = computed(() => {
     '/admin/students': '学生管理',
     '/admin/teachers': '教师管理',
     '/admin/organization': '院系 / 班级管理',
+    '/admin/courses': '课程管理',
+    '/admin/scores': '成绩管理',
+    '/admin/profile': '个人中心',
+    '/teacher/courses': '课程管理',
+    '/teacher/scores': '成绩管理',
+    '/teacher/profile': '个人中心',
   }[route.path] || props.sectionTitle
 })
 
