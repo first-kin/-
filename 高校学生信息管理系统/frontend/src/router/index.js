@@ -4,6 +4,9 @@ import AdminHome from '../views/AdminHome.vue'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import StudentView from '../views/StudentView.vue'
 import ModulePending from '../views/ModulePending.vue'
+import AdminStudents from '../views/AdminStudents.vue'
+import AdminTeachers from '../views/AdminTeachers.vue'
+import AdminOrganization from '../views/AdminOrganization.vue'
 import { homeForRole, useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -16,7 +19,12 @@ const router = createRouter({
       component: AdminLayout,
       props: { homePath: '/admin', sectionTitle: '管理员首页' },
       meta: { requiresAuth: true, roles: ['admin'] },
-      children: [{ path: '', component: AdminHome }],
+      children: [
+        { path: '', component: AdminHome },
+        { path: 'students', component: AdminStudents },
+        { path: 'teachers', component: AdminTeachers },
+        { path: 'organization', component: AdminOrganization },
+      ],
     },
     {
       path: '/teacher',

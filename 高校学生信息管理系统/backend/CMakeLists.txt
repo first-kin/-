@@ -11,13 +11,12 @@ add_executable(${PROJECT_NAME}
     main.cpp
     controllers/AuthController.cpp
     filters/JwtFilter.cpp
-    # ---- C 部分：课程 / 成绩 / 通知公告 ----
-    controllers/CourseController.cpp
-    controllers/ScoreController.cpp
-    controllers/NoticeController.cpp
-    services/CourseService.cpp
-    services/ScoreService.cpp
-    services/NoticeService.cpp
+    controllers/StudentController.cpp
+    controllers/TeacherController.cpp
+    controllers/DeptController.cpp
+    services/StudentService.cpp
+    services/TeacherService.cpp
+    services/DeptService.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE

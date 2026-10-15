@@ -3,29 +3,44 @@
     <header>
       <div>
         <h2>高校学生信息管理系统</h2>
-        <small>{{ sectionTitle }}</small>
+        <small>{{ currentSectionTitle }}</small>
       </div>
       <button type="button" @click="handleLogout">退出登录</button>
     </header>
-<nav>
-  <RouterLink :to="homePath">{{ sectionTitle }}</RouterLink>
- 
-</nav>
+    <nav>
+      <RouterLink :to="homePath">{{ sectionTitle }}</RouterLink>
+      <template v-if="homePath === '/admin'">
+        <RouterLink to="/admin/students">学生管理</RouterLink>
+        <RouterLink to="/admin/teachers">教师管理</RouterLink>
+        <RouterLink to="/admin/organization">院系/班级</RouterLink>
+      </template>
+    </nav>
     <main>
       <RouterView />
     </main>
   </div>
 </template>
 <script setup>
-import { useRouter } from 'vue-router'
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { logout } from '../api/auth'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
-defineProps({
+const props = defineProps({
   homePath: { type: String, default: '/admin' },
   sectionTitle: { type: String, default: '管理员首页' },
+})
+const currentSectionTitle = computed(() => {
+  if (props.homePath !== '/admin') return props.sectionTitle
+  return {
+    '/admin': '管理员首页',
+    '/admin/students': '学生管理',
+    '/admin/teachers': '教师管理',
+    '/admin/organization': '院系 / 班级管理',
+  }[route.path] || props.sectionTitle
 })
 
 function handleLogout() {
@@ -60,6 +75,7 @@ main {
 }
 nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 24px;
   padding: 16px 24px;
   background: #ecf5ff;
