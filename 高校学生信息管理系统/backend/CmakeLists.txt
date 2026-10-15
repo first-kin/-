@@ -11,6 +11,12 @@ add_executable(${PROJECT_NAME}
     main.cpp
     controllers/AuthController.cpp
     filters/JwtFilter.cpp
+    controllers/StudentController.cpp
+    controllers/TeacherController.cpp
+    controllers/DeptController.cpp
+    services/StudentService.cpp
+    services/TeacherService.cpp
+    services/DeptService.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
