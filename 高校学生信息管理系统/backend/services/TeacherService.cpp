@@ -65,12 +65,12 @@ const char *kTeacherSelect =
     "       d.dept_name, t.phone, t.email "
     "FROM teachers t JOIN departments d ON t.dept_id = d.id ";
 
-// $1/$2 本人范围(0=不限)  $3/$4/$5 keyword(转义后)  $6/$7 deptId
+// ?/? 本人范围(0=不限)  ?/?/? keyword(转义后)  ?/? deptId
 const char *kTeacherWhere =
     "WHERE t.is_deleted = 0 "
-    "AND ($1 = 0 OR t.id = $2) "
-    "AND ($3 = '' OR t.teacher_no LIKE $4 ESCAPE '!' OR t.name LIKE $5 ESCAPE '!') "
-    "AND ($6 = 0 OR t.dept_id = $7) ";
+    "AND (? = 0 OR t.id = ?) "
+    "AND (? = '' OR t.teacher_no LIKE ? ESCAPE '!' OR t.name LIKE ? ESCAPE '!') "
+    "AND (? = 0 OR t.dept_id = ?) ";
 
 // teacher 角色按登录 user_id 解析教师 id（无档案返回 -1，查询结果为空）
 int64_t resolveTeacherId(drogon::orm::DbClient *client, int64_t selfTeacherUserId)
@@ -78,7 +78,7 @@ int64_t resolveTeacherId(drogon::orm::DbClient *client, int64_t selfTeacherUserI
     if (selfTeacherUserId <= 0)
         return 0;
     auto rows = client->execSqlSync(
-        "SELECT id FROM teachers WHERE user_id = $1 AND is_deleted = 0 LIMIT 1",
+        "SELECT id FROM teachers WHERE user_id = ? AND is_deleted = 0 LIMIT 1",
         selfTeacherUserId);
     if (rows.empty())
         return -1;
@@ -111,7 +111,7 @@ api::Result TeacherService::list(int64_t selfTeacherUserId, const string &keywor
 
         auto rows = client->execSqlSync(
             string(kTeacherSelect) + kTeacherWhere +
-                "ORDER BY t.id DESC LIMIT $8 OFFSET $9",
+                "ORDER BY t.id DESC LIMIT ? OFFSET ?",
             teacherId, teacherId, keyword, pattern, pattern, deptId, deptId,
             size, offset);
 
@@ -143,7 +143,7 @@ api::Result TeacherService::detail(int64_t id, int64_t selfTeacherUserId)
 
         auto rows = client->execSqlSync(
             string(kTeacherSelect) +
-                "WHERE t.id = $1 AND t.is_deleted = 0 AND ($2 = 0 OR t.id = $3) LIMIT 1",
+                "WHERE t.id = ? AND t.is_deleted = 0 AND (? = 0 OR t.id = ?) LIMIT 1",
             id, teacherId, teacherId);
 
         if (rows.empty())
@@ -179,18 +179,18 @@ api::Result TeacherService::create(const Json::Value &body)
         auto client = api::db();
 
         auto dup = client->execSqlSync(
-            "SELECT id FROM teachers WHERE teacher_no = $1 LIMIT 1", teacherNo);
+            "SELECT id FROM teachers WHERE teacher_no = ? LIMIT 1", teacherNo);
         if (!dup.empty())
             return util::fail(util::kDuplicate, "工号已存在");
 
         // 登录账号用户名 = 工号，需同时防止与学生学号撞名（users.username 唯一）
         auto dupUser = client->execSqlSync(
-            "SELECT id FROM users WHERE username = $1 LIMIT 1", teacherNo);
+            "SELECT id FROM users WHERE username = ? LIMIT 1", teacherNo);
         if (!dupUser.empty())
             return util::fail(util::kDuplicate, "工号已存在");
 
         auto dept = client->execSqlSync(
-            "SELECT id FROM departments WHERE id = $1 LIMIT 1", deptId);
+            "SELECT id FROM departments WHERE id = ? LIMIT 1", deptId);
         if (dept.empty())
             return util::fail(util::kNotFound, "院系不存在");
 
@@ -202,14 +202,14 @@ api::Result TeacherService::create(const Json::Value &body)
                                        ? teacherNo.substr(teacherNo.size() - 6)
                                        : teacherNo;
             auto userRes = trans->execSqlSync(
-                "INSERT INTO users (username, password, role) VALUES ($1, $2, 'teacher')",
+                "INSERT INTO users (username, password, role) VALUES (?, ?, 'teacher')",
                 teacherNo, util::hashPassword(initPwd));
             const int64_t userId = static_cast<int64_t>(userRes.insertId());
 
             auto teaRes = trans->execSqlSync(
                 "INSERT INTO teachers (user_id, teacher_no, name, gender, title, "
                 "dept_id, phone, email) "
-                "VALUES ($1, $2, $3, $4, NULLIF($5, ''), $6, NULLIF($7, ''), NULLIF($8, ''))",
+                "VALUES (?, ?, ?, ?, NULLIF(?, ''), ?, NULLIF(?, ''), NULLIF(?, ''))",
                 userId, teacherNo, name, gender, hasTitle ? title : string(),
                 deptId, hasPhone ? phone : string(), hasEmail ? email : string());
             teaId = static_cast<int64_t>(teaRes.insertId());
@@ -246,20 +246,20 @@ api::Result TeacherService::update(int64_t id, const Json::Value &body)
         auto client = api::db();
 
         auto exist = client->execSqlSync(
-            "SELECT id FROM teachers WHERE id = $1 AND is_deleted = 0 LIMIT 1", id);
+            "SELECT id FROM teachers WHERE id = ? AND is_deleted = 0 LIMIT 1", id);
         if (exist.empty())
             return util::fail(util::kNotFound, "教师不存在");
 
         auto dept = client->execSqlSync(
-            "SELECT id FROM departments WHERE id = $1 LIMIT 1", deptId);
+            "SELECT id FROM departments WHERE id = ? LIMIT 1", deptId);
         if (dept.empty())
             return util::fail(util::kNotFound, "院系不存在");
 
         // 工号不可修改；空串经 NULLIF 写为 NULL
         auto res = client->execSqlSync(
-            "UPDATE teachers SET name = $2, gender = $3, title = NULLIF($4, ''), "
-            "dept_id = $5, phone = NULLIF($6, ''), email = NULLIF($7, '') "
-            "WHERE id = $1 AND is_deleted = 0",
+            "UPDATE teachers SET name = ?, gender = ?, title = NULLIF(?, ''), "
+            "dept_id = ?, phone = NULLIF(?, ''), email = NULLIF(?, '') "
+            "WHERE id = ? AND is_deleted = 0",
             id, name, gender, hasTitle ? title : string(), deptId,
             hasPhone ? phone : string(), hasEmail ? email : string());
         (void)res;
@@ -278,20 +278,20 @@ api::Result TeacherService::remove(int64_t id)
         auto client = api::db();
 
         auto exist = client->execSqlSync(
-            "SELECT id FROM teachers WHERE id = $1 AND is_deleted = 0 LIMIT 1", id);
+            "SELECT id FROM teachers WHERE id = ? AND is_deleted = 0 LIMIT 1", id);
         if (exist.empty())
             return util::fail(util::kNotFound, "教师不存在");
 
         // 仍担任班主任则禁止删除（classes 表无逻辑删除列，直接查引用）
         auto classRows = client->execSqlSync(
-            "SELECT id FROM classes WHERE head_teacher_id = $1 LIMIT 1", id);
+            "SELECT id FROM classes WHERE head_teacher_id = ? LIMIT 1", id);
         if (!classRows.empty())
             return util::fail(util::kRuleConflict, "该教师仍关联班级或课程，无法删除");
 
         // 任教课程名压入手写栈，pop 出栈倒序拼接进提示信息
         MyStack<string> courseNames;
         auto courseRows = client->execSqlSync(
-            "SELECT course_name FROM courses WHERE teacher_id = $1 AND is_deleted = 0",
+            "SELECT course_name FROM courses WHERE teacher_id = ? AND is_deleted = 0",
             id);
         for (const auto &r : courseRows)
             courseNames.push(r["course_name"].as<string>());
@@ -310,7 +310,7 @@ api::Result TeacherService::remove(int64_t id)
         }
 
         auto res = client->execSqlSync(
-            "UPDATE teachers SET is_deleted = 1 WHERE id = $1 AND is_deleted = 0", id);
+            "UPDATE teachers SET is_deleted = 1 WHERE id = ? AND is_deleted = 0", id);
         if (res.affectedRows() == 0)
             return util::fail(util::kNotFound, "教师不存在");
         return util::okMsg("删除成功");

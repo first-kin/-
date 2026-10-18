@@ -1,0 +1,10 @@
+^D:\GIT\-\高校学生信息管理系统\BACKEND\CMAKELISTS.TXT
+setlocal
+D:\cmake\bin\cmake.exe -SD:/git/-/高校学生信息管理系统/backend -BD:/git/-/高校学生信息管理系统/backend/build --check-stamp-file D:/git/-/高校学生信息管理系统/backend/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

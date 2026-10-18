@@ -107,12 +107,12 @@ api::Result DeptService::deptCreate(const Json::Value &body)
         auto client = api::db();
 
         auto dup = client->execSqlSync(
-            "SELECT id FROM departments WHERE dept_name = $1 LIMIT 1", deptName);
+            "SELECT id FROM departments WHERE dept_name = ? LIMIT 1", deptName);
         if (!dup.empty())
             return util::fail(util::kDuplicate, "院系名称已存在");
 
         auto res = client->execSqlSync(
-            "INSERT INTO departments (dept_name) VALUES ($1)", deptName);
+            "INSERT INTO departments (dept_name) VALUES (?)", deptName);
 
         Json::Value data(Json::objectValue);
         data["id"] = static_cast<Json::Int64>(res.insertId());
@@ -135,18 +135,18 @@ api::Result DeptService::deptUpdate(int64_t id, const Json::Value &body)
         auto client = api::db();
 
         auto exist = client->execSqlSync(
-            "SELECT id FROM departments WHERE id = $1 LIMIT 1", id);
+            "SELECT id FROM departments WHERE id = ? LIMIT 1", id);
         if (exist.empty())
             return util::fail(util::kNotFound, "院系不存在");
 
         auto dup = client->execSqlSync(
-            "SELECT id FROM departments WHERE dept_name = $1 AND id != $2 LIMIT 1",
+            "SELECT id FROM departments WHERE dept_name = ? AND id != ? LIMIT 1",
             deptName, id);
         if (!dup.empty())
             return util::fail(util::kDuplicate, "院系名称已存在");
 
         auto res = client->execSqlSync(
-            "UPDATE departments SET dept_name = $2 WHERE id = $1", id, deptName);
+            "UPDATE departments SET dept_name = ? WHERE id = ?", id, deptName);
         if (res.affectedRows() == 0)
             return util::fail(util::kNotFound, "院系不存在");
         return util::okMsg("保存成功");
@@ -164,24 +164,24 @@ api::Result DeptService::deptRemove(int64_t id)
         auto client = api::db();
 
         auto exist = client->execSqlSync(
-            "SELECT id FROM departments WHERE id = $1 LIMIT 1", id);
+            "SELECT id FROM departments WHERE id = ? LIMIT 1", id);
         if (exist.empty())
             return util::fail(util::kNotFound, "院系不存在");
 
         // 有教师挂在该院系下则禁止删除
         auto tea = client->execSqlSync(
-            "SELECT id FROM teachers WHERE dept_id = $1 AND is_deleted = 0 LIMIT 1", id);
+            "SELECT id FROM teachers WHERE dept_id = ? AND is_deleted = 0 LIMIT 1", id);
         if (!tea.empty())
             return util::fail(util::kRuleConflict, "该院系仍有关联教师，无法删除");
 
         // 有专业挂在该院系下则禁止删除（专业表无逻辑删除列，直接查引用）
         auto maj = client->execSqlSync(
-            "SELECT id FROM majors WHERE dept_id = $1 LIMIT 1", id);
+            "SELECT id FROM majors WHERE dept_id = ? LIMIT 1", id);
         if (!maj.empty())
             return util::fail(util::kRuleConflict, "该院系仍有关联专业，无法删除");
 
         auto res = client->execSqlSync(
-            "DELETE FROM departments WHERE id = $1", id);
+            "DELETE FROM departments WHERE id = ?", id);
         if (res.affectedRows() == 0)
             return util::fail(util::kNotFound, "院系不存在");
         return util::okMsg("删除成功");
@@ -200,7 +200,7 @@ api::Result DeptService::classList(int64_t majorId)
     {
         auto rows = api::db()->execSqlSync(
             "SELECT id, class_name, major_id, grade, head_teacher_id "
-            "FROM classes WHERE ($1 = 0 OR major_id = $2) ORDER BY id",
+            "FROM classes WHERE (? = 0 OR major_id = ?) ORDER BY id",
             majorId, majorId);
 
         // LinkedList 头插暂存班级行，forEach 倒序回填还原查询顺序
@@ -244,20 +244,20 @@ api::Result DeptService::classCreate(const Json::Value &body)
         auto client = api::db();
 
         auto dup = client->execSqlSync(
-            "SELECT id FROM classes WHERE class_name = $1 AND grade = $2 LIMIT 1",
+            "SELECT id FROM classes WHERE class_name = ? AND grade = ? LIMIT 1",
             className, grade);
         if (!dup.empty())
             return util::fail(util::kDuplicate, "同年级班级名称已存在");
 
         auto major = client->execSqlSync(
-            "SELECT id FROM majors WHERE id = $1 LIMIT 1", majorId);
+            "SELECT id FROM majors WHERE id = ? LIMIT 1", majorId);
         if (major.empty())
             return util::fail(util::kNotFound, "专业不存在");
 
         if (headTeacherId > 0)
         {
             auto head = client->execSqlSync(
-                "SELECT id FROM teachers WHERE id = $1 AND is_deleted = 0 LIMIT 1",
+                "SELECT id FROM teachers WHERE id = ? AND is_deleted = 0 LIMIT 1",
                 headTeacherId);
             if (head.empty())
                 return util::fail(util::kNotFound, "班主任不存在");
@@ -265,7 +265,7 @@ api::Result DeptService::classCreate(const Json::Value &body)
 
         auto res = client->execSqlSync(
             "INSERT INTO classes (class_name, major_id, grade, head_teacher_id) "
-            "VALUES ($1, $2, $3, NULLIF($4, 0))",
+            "VALUES (?, ?, ?, NULLIF(?, 0))",
             className, majorId, grade, headTeacherId);
 
         Json::Value data(Json::objectValue);
@@ -294,33 +294,33 @@ api::Result DeptService::classUpdate(int64_t id, const Json::Value &body)
         auto client = api::db();
 
         auto exist = client->execSqlSync(
-            "SELECT id FROM classes WHERE id = $1 LIMIT 1", id);
+            "SELECT id FROM classes WHERE id = ? LIMIT 1", id);
         if (exist.empty())
             return util::fail(util::kNotFound, "班级不存在");
 
         auto dup = client->execSqlSync(
-            "SELECT id FROM classes WHERE class_name = $1 AND grade = $2 AND id != $3 LIMIT 1",
+            "SELECT id FROM classes WHERE class_name = ? AND grade = ? AND id != ? LIMIT 1",
             className, grade, id);
         if (!dup.empty())
             return util::fail(util::kDuplicate, "同年级班级名称已存在");
 
         auto major = client->execSqlSync(
-            "SELECT id FROM majors WHERE id = $1 LIMIT 1", majorId);
+            "SELECT id FROM majors WHERE id = ? LIMIT 1", majorId);
         if (major.empty())
             return util::fail(util::kNotFound, "专业不存在");
 
         if (headTeacherId > 0)
         {
             auto head = client->execSqlSync(
-                "SELECT id FROM teachers WHERE id = $1 AND is_deleted = 0 LIMIT 1",
+                "SELECT id FROM teachers WHERE id = ? AND is_deleted = 0 LIMIT 1",
                 headTeacherId);
             if (head.empty())
                 return util::fail(util::kNotFound, "班主任不存在");
         }
 
         auto res = client->execSqlSync(
-            "UPDATE classes SET class_name = $2, major_id = $3, grade = $4, "
-            "head_teacher_id = NULLIF($5, 0) WHERE id = $1",
+            "UPDATE classes SET class_name = ?, major_id = ?, grade = ?, "
+            "head_teacher_id = NULLIF(?, 0) WHERE id = ?",
             id, className, majorId, grade, headTeacherId);
         if (res.affectedRows() == 0)
             return util::fail(util::kNotFound, "班级不存在");
@@ -339,18 +339,18 @@ api::Result DeptService::classRemove(int64_t id)
         auto client = api::db();
 
         auto exist = client->execSqlSync(
-            "SELECT id FROM classes WHERE id = $1 LIMIT 1", id);
+            "SELECT id FROM classes WHERE id = ? LIMIT 1", id);
         if (exist.empty())
             return util::fail(util::kNotFound, "班级不存在");
 
         // 班级下仍有在读学生则禁止删除
         auto stu = client->execSqlSync(
-            "SELECT id FROM students WHERE class_id = $1 AND is_deleted = 0 LIMIT 1", id);
+            "SELECT id FROM students WHERE class_id = ? AND is_deleted = 0 LIMIT 1", id);
         if (!stu.empty())
             return util::fail(util::kRuleConflict, "该班级仍有关联学生，无法删除");
 
         auto res = client->execSqlSync(
-            "DELETE FROM classes WHERE id = $1", id);
+            "DELETE FROM classes WHERE id = ?", id);
         if (res.affectedRows() == 0)
             return util::fail(util::kNotFound, "班级不存在");
         return util::okMsg("删除成功");

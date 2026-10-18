@@ -1,0 +1,28 @@
+{
+  // Drogon 应用配置：端口 / 数据库 / JWT 密钥
+  // 注意：JSON 中的注释仅在 Drogon 加载时允许（内部实现支持）
+  "listeners": [
+    {
+      "address": "0.0.0.0",
+      "port": 8080
+    }
+  ],
+  "db_clients": [
+    {
+      "name": "default",
+      "rdbms": "mysql",
+      "host": "127.0.0.1",
+      "port": 3306,
+      "dbname": "student_mgmt",
+      "user": "root",
+      "passwd": "Wjc20060615!",
+      "number_of_connections": 10
+    }
+  ],
+  "custom": {
+    // JwtFilter 读取：app().getCustomConfig()["jwt"]["secret"]
+    "jwt": {
+      "secret": "student-sys-dev-secret"
+    }
+  }
+}

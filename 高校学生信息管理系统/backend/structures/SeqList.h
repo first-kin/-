@@ -2,7 +2,8 @@
 #include <cstddef>      // size_t
 #include <stdexcept>    // out_of_range
 
-using namespace std;
+using std::size_t;
+using std::out_of_range;
 
 // 顺序表:底层为动态数组,容量不足时自动 2 倍扩容
 template <typename T>

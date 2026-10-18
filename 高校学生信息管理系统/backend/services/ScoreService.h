@@ -6,7 +6,8 @@
 
 #include "models/Score.h"
 #include "utils/Result.h"
-using namespace std;
+using std::string;
+using std::vector;
 
 namespace svc
 {

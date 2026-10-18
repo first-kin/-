@@ -2,7 +2,8 @@
 #include <cstddef>      // size_t
 #include <stdexcept>    // underflow_error
 
-using namespace std;
+using std::size_t;
+using std::underflow_error;
 
 // 循环队列:先进先出(FIFO),用环形数组实现,出队 O(1)
 template <typename T>

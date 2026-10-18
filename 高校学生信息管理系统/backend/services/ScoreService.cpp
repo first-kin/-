@@ -64,10 +64,10 @@ api::Result ScoreService::list(int64_t courseId, int64_t studentId, const string
 
     const char *kWhere =
         "WHERE s.is_deleted = 0 AND c.is_deleted = 0 "
-        "AND ($1 = 0 OR sc.course_id = $2) "
-        "AND ($3 = 0 OR sc.student_id = $4) "
-        "AND ($5 = '' OR s.name LIKE $6 OR s.student_no LIKE $7) "
-        "AND ($8 = 0 OR c.teacher_id = $9) ";
+        "AND (? = 0 OR sc.course_id = ?) "
+        "AND (? = 0 OR sc.student_id = ?) "
+        "AND (? = '' OR s.name LIKE ? OR s.student_no LIKE ?) "
+        "AND (? = 0 OR c.teacher_id = ?) ";
 
     try
     {
@@ -83,7 +83,7 @@ api::Result ScoreService::list(int64_t courseId, int64_t studentId, const string
         const int64_t total = countRows[0]["total"].as<int64_t>();
 
         auto rows = client->execSqlSync(
-            string(kScoreSelect) + kWhere + "ORDER BY sc.id DESC LIMIT $10 OFFSET $11",
+            string(kScoreSelect) + kWhere + "ORDER BY sc.id DESC LIMIT ? OFFSET ?",
             courseId, courseId, studentId, studentId, keyword, pattern, pattern,
             teacherScope, teacherScope, size, offset);
 
@@ -113,8 +113,8 @@ api::Result ScoreService::myScores(int64_t userId, const string &semester)
         "FROM scores sc "
         "JOIN students s ON sc.student_id = s.id "
         "JOIN courses c ON sc.course_id = c.id "
-        "WHERE s.user_id = $1 AND s.is_deleted = 0 AND c.is_deleted = 0 "
-        "AND ($2 = '' OR IFNULL(c.semester, '') = $3) "
+        "WHERE s.user_id = ? AND s.is_deleted = 0 AND c.is_deleted = 0 "
+        "AND (? = '' OR IFNULL(c.semester, '') = ?) "
         "ORDER BY c.semester DESC, sc.id DESC";
 
     try
@@ -143,7 +143,7 @@ api::Result ScoreService::save(const model::Score &s, int64_t teacherScope)
         auto client = api::db();
 
         auto course = client->execSqlSync(
-            "SELECT teacher_id FROM courses WHERE id = $1 AND is_deleted = 0", s.courseId);
+            "SELECT teacher_id FROM courses WHERE id = ? AND is_deleted = 0", s.courseId);
         if (course.size() == 0)
             return api::Result::error(api::E_PARAM, "课程不存在");
 
@@ -156,13 +156,13 @@ api::Result ScoreService::save(const model::Score &s, int64_t teacherScope)
         }
 
         auto stu = client->execSqlSync(
-            "SELECT id FROM students WHERE id = $1 AND is_deleted = 0", s.studentId);
+            "SELECT id FROM students WHERE id = ? AND is_deleted = 0", s.studentId);
         if (stu.size() == 0)
             return api::Result::error(api::E_PARAM, "学生不存在");
 
         // 变更前状态：用于留痕与撤销
         auto old = client->execSqlSync(
-            "SELECT id, score, status FROM scores WHERE student_id = $1 AND course_id = $2",
+            "SELECT id, score, status FROM scores WHERE student_id = ? AND course_id = ?",
             s.studentId, s.courseId);
 
         ScoreChange rec;
@@ -182,7 +182,7 @@ api::Result ScoreService::save(const model::Score &s, int64_t teacherScope)
         {
             client->execSqlSync(
                 "INSERT INTO scores (student_id, course_id, score, status, exam_time) "
-                "VALUES ($1, $2, $3, $4, IF($5 = '', NULL, $6)) "
+                "VALUES (?, ?, ?, ?, IF(? = '', NULL, ?)) "
                 "ON DUPLICATE KEY UPDATE score = VALUES(score), status = VALUES(status), "
                 "exam_time = VALUES(exam_time)",
                 s.studentId, s.courseId, s.score, s.status, s.examTime, s.examTime);
@@ -191,7 +191,7 @@ api::Result ScoreService::save(const model::Score &s, int64_t teacherScope)
         {
             client->execSqlSync(
                 "INSERT INTO scores (student_id, course_id, score, status, exam_time) "
-                "VALUES ($1, $2, NULL, $3, IF($4 = '', NULL, $5)) "
+                "VALUES (?, ?, NULL, ?, IF(? = '', NULL, ?)) "
                 "ON DUPLICATE KEY UPDATE score = NULL, status = VALUES(status), "
                 "exam_time = VALUES(exam_time)",
                 s.studentId, s.courseId, s.status, s.examTime, s.examTime);
@@ -257,7 +257,7 @@ api::Result ScoreService::statistics(int64_t courseId, int64_t teacherScope)
         auto client = api::db();
 
         auto course = client->execSqlSync(
-            "SELECT course_name, teacher_id FROM courses WHERE id = $1 AND is_deleted = 0",
+            "SELECT course_name, teacher_id FROM courses WHERE id = ? AND is_deleted = 0",
             courseId);
         if (course.size() == 0)
             return api::Result::error(api::E_NOT_FOUND, "课程不存在");
@@ -277,7 +277,7 @@ api::Result ScoreService::statistics(int64_t courseId, int64_t teacherScope)
             "       SUM(CASE WHEN score >= 60 THEN 1 ELSE 0 END) AS pass_cnt, "
             "       SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS absent_cnt, "
             "       SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) AS deferred_cnt "
-            "FROM scores WHERE course_id = $1",
+            "FROM scores WHERE course_id = ?",
             courseId);
 
         const auto &row = agg[0];
@@ -294,7 +294,7 @@ api::Result ScoreService::statistics(int64_t courseId, int64_t teacherScope)
             bins.pushBack(0);
 
         auto scoreRows = client->execSqlSync(
-            "SELECT score FROM scores WHERE course_id = $1 AND score IS NOT NULL", courseId);
+            "SELECT score FROM scores WHERE course_id = ? AND score IS NOT NULL", courseId);
         for (const auto &r : scoreRows)
         {
             const double v = r["score"].as<double>();
@@ -361,17 +361,17 @@ api::Result ScoreService::undoLast()
         {
             if (rec.hadScore)
                 client->execSqlSync(
-                    "UPDATE scores SET score = $1, status = $2 WHERE id = $3",
+                    "UPDATE scores SET score = ?, status = ? WHERE id = ?",
                     rec.oldScore, rec.oldStatus, rec.scoreId);
             else
                 client->execSqlSync(
-                    "UPDATE scores SET score = NULL, status = $1 WHERE id = $2",
+                    "UPDATE scores SET score = NULL, status = ? WHERE id = ?",
                     rec.oldStatus, rec.scoreId);
         }
         else
         {
             client->execSqlSync(
-                "DELETE FROM scores WHERE student_id = $1 AND course_id = $2",
+                "DELETE FROM scores WHERE student_id = ? AND course_id = ?",
                 rec.studentId, rec.courseId);
         }
 

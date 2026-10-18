@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\git\-\高校学生信息管理系统\backend\build\CMakeFiles\b25dd6bfb963ac02c4e4f728538c6c18\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{ED7CE8D0-DB7E-3F8A-93CC-C1493B21655C}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

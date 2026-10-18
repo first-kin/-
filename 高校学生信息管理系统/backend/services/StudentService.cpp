@@ -141,15 +141,15 @@ const char *kStudentSelect =
     "       DATE_FORMAT(s.birth_date, '%Y-%m-%d') AS birth_date "
     "FROM students s JOIN classes c ON s.class_id = c.id ";
 
-// $1/$2 教师范围(0=不限)  $3/$4/$5/$6 keyword(转义后)  $7/$8 classId
+// ?/? 教师范围(0=不限)  ?/?/?/? keyword(转义后)  ?/? classId
 const char *kStudentWhere =
     "WHERE s.is_deleted = 0 "
-    "AND ($1 = 0 OR s.class_id IN "
-    "     (SELECT cl.id FROM classes cl WHERE cl.head_teacher_id = $2)) "
-    "AND ($3 = '' OR s.student_no LIKE $4 ESCAPE '!' "
-    "          OR s.name LIKE $5 ESCAPE '!' "
-    "          OR c.class_name LIKE $6 ESCAPE '!') "
-    "AND ($7 = 0 OR s.class_id = $8) ";
+    "AND (? = 0 OR s.class_id IN "
+    "     (SELECT cl.id FROM classes cl WHERE cl.head_teacher_id = ?)) "
+    "AND (? = '' OR s.student_no LIKE ? ESCAPE '!' "
+    "          OR s.name LIKE ? ESCAPE '!' "
+    "          OR c.class_name LIKE ? ESCAPE '!') "
+    "AND (? = 0 OR s.class_id = ?) ";
 
 // teacher 角色按登录 user_id 解析教师 id（无档案返回 0，查不到即空结果）
 int64_t resolveTeacherId(drogon::orm::DbClient *client, int64_t selfTeacherUserId)
@@ -157,7 +157,7 @@ int64_t resolveTeacherId(drogon::orm::DbClient *client, int64_t selfTeacherUserI
     if (selfTeacherUserId <= 0)
         return 0;
     auto rows = client->execSqlSync(
-        "SELECT id FROM teachers WHERE user_id = $1 AND is_deleted = 0 LIMIT 1",
+        "SELECT id FROM teachers WHERE user_id = ? AND is_deleted = 0 LIMIT 1",
         selfTeacherUserId);
     if (rows.empty())
         return -1;
@@ -192,7 +192,7 @@ api::Result StudentService::list(int64_t selfTeacherUserId, const string &keywor
 
         auto rows = client->execSqlSync(
             string(kStudentSelect) + kStudentWhere +
-                "ORDER BY s.id DESC LIMIT $9 OFFSET $10",
+                "ORDER BY s.id DESC LIMIT ? OFFSET ?",
             teacherId, teacherId, keyword, pattern, pattern, pattern, classId, classId,
             size, offset);
 
@@ -226,9 +226,9 @@ api::Result StudentService::detail(int64_t id, int64_t selfTeacherUserId)
 
         auto rows = client->execSqlSync(
             string(kStudentSelect) +
-                "WHERE s.id = $1 AND s.is_deleted = 0 "
-                "AND ($2 = 0 OR s.class_id IN "
-                "     (SELECT cl.id FROM classes cl WHERE cl.head_teacher_id = $3)) "
+                "WHERE s.id = ? AND s.is_deleted = 0 "
+                "AND (? = 0 OR s.class_id IN "
+                "     (SELECT cl.id FROM classes cl WHERE cl.head_teacher_id = ?)) "
                 "LIMIT 1",
             id, teacherId, teacherId);
 
@@ -266,12 +266,12 @@ api::Result StudentService::create(const Json::Value &body)
         auto client = api::db();
 
         auto dup = client->execSqlSync(
-            "SELECT id FROM students WHERE student_no = $1 LIMIT 1", studentNo);
+            "SELECT id FROM students WHERE student_no = ? LIMIT 1", studentNo);
         if (!dup.empty())
             return util::fail(util::kDuplicate, "学号已存在");
 
         auto cls = client->execSqlSync(
-            "SELECT id FROM classes WHERE id = $1 LIMIT 1", classId);
+            "SELECT id FROM classes WHERE id = ? LIMIT 1", classId);
         if (cls.empty())
             return util::fail(util::kNotFound, "班级不存在");
 
@@ -283,15 +283,15 @@ api::Result StudentService::create(const Json::Value &body)
                                        ? studentNo.substr(studentNo.size() - 6)
                                        : studentNo;
             auto userRes = trans->execSqlSync(
-                "INSERT INTO users (username, password, role) VALUES ($1, $2, 'student')",
+                "INSERT INTO users (username, password, role) VALUES (?, ?, 'student')",
                 studentNo, util::hashPassword(initPwd));
             const int64_t userId = static_cast<int64_t>(userRes.insertId());
 
             auto stuRes = trans->execSqlSync(
                 "INSERT INTO students (user_id, student_no, name, gender, birth_date, "
                 "class_id, phone, email, address) "
-                "VALUES ($1, $2, $3, $4, NULLIF($5, ''), $6, "
-                "NULLIF($7, ''), NULLIF($8, ''), NULLIF($9, ''))",
+                "VALUES (?, ?, ?, ?, NULLIF(?, ''), ?, "
+                "NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''))",
                 userId, studentNo, name, gender, hasBirth ? birthDate : string(),
                 classId, hasPhone ? phone : string(), hasEmail ? email : string(),
                 hasAddr ? address : string());
@@ -330,20 +330,20 @@ api::Result StudentService::update(int64_t id, const Json::Value &body)
         auto client = api::db();
 
         auto exist = client->execSqlSync(
-            "SELECT id FROM students WHERE id = $1 AND is_deleted = 0 LIMIT 1", id);
+            "SELECT id FROM students WHERE id = ? AND is_deleted = 0 LIMIT 1", id);
         if (exist.empty())
             return util::fail(util::kNotFound, "学生不存在");
 
         auto cls = client->execSqlSync(
-            "SELECT id FROM classes WHERE id = $1 LIMIT 1", classId);
+            "SELECT id FROM classes WHERE id = ? LIMIT 1", classId);
         if (cls.empty())
             return util::fail(util::kNotFound, "班级不存在");
 
         // 学号不可修改；空串经 NULLIF 写为 NULL；affectedRows==0 表示数据无变化
         auto res = client->execSqlSync(
-            "UPDATE students SET name = $2, gender = $3, birth_date = NULLIF($4, ''), "
-            "class_id = $5, phone = NULLIF($6, ''), email = NULLIF($7, ''), "
-            "address = NULLIF($8, '') WHERE id = $1 AND is_deleted = 0",
+            "UPDATE students SET name = ?, gender = ?, birth_date = NULLIF(?, ''), "
+            "class_id = ?, phone = NULLIF(?, ''), email = NULLIF(?, ''), "
+            "address = NULLIF(?, '') WHERE id = ? AND is_deleted = 0",
             id, name, gender, hasBirth ? birthDate : string(), classId,
             hasPhone ? phone : string(), hasEmail ? email : string(),
             hasAddr ? address : string());
@@ -361,7 +361,7 @@ api::Result StudentService::remove(int64_t id)
     try
     {
         auto res = api::db()->execSqlSync(
-            "UPDATE students SET is_deleted = 1 WHERE id = $1 AND is_deleted = 0", id);
+            "UPDATE students SET is_deleted = 1 WHERE id = ? AND is_deleted = 0", id);
         if (res.affectedRows() == 0)
             return util::fail(util::kNotFound, "学生不存在");
         return util::okMsg("删除成功");
@@ -462,7 +462,7 @@ api::Result StudentService::importCsv(const string &csvText)
             try
             {
                 auto dup = client->execSqlSync(
-                    "SELECT id FROM students WHERE student_no = $1 LIMIT 1", no);
+                    "SELECT id FROM students WHERE student_no = ? LIMIT 1", no);
                 if (!dup.empty())
                 {
                     ++failed;
@@ -474,13 +474,13 @@ api::Result StudentService::importCsv(const string &csvText)
                 const string initPwd =
                     no.size() >= 6 ? no.substr(no.size() - 6) : no;
                 auto userRes = trans->execSqlSync(
-                    "INSERT INTO users (username, password, role) VALUES ($1, $2, 'student')",
+                    "INSERT INTO users (username, password, role) VALUES (?, ?, 'student')",
                     no, util::hashPassword(initPwd));
                 trans->execSqlSync(
                     "INSERT INTO students (user_id, student_no, name, gender, "
                     "birth_date, class_id, phone, email, address) "
-                    "VALUES ($1, $2, $3, $4, NULLIF($5, ''), $6, "
-                    "NULLIF($7, ''), NULLIF($8, ''), NULLIF($9, ''))",
+                    "VALUES (?, ?, ?, ?, NULLIF(?, ''), ?, "
+                    "NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''))",
                     static_cast<int64_t>(userRes.insertId()), no, nm, gd, bd, clsId,
                     ph, em, ad);
                 ++success;
@@ -512,7 +512,7 @@ api::Result StudentService::exportCsv(int64_t selfTeacherUserId, const string &k
     try
     {
         auto client = api::db();
-        const int64_t teacherId = resolveTeacherId(client.get(), selfTeacherUserId);
+        int64_t teacherId = resolveTeacherId(client.get(), selfTeacherUserId);
         if (teacherId < 0)
             teacherId = 0;
 

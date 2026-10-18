@@ -48,7 +48,7 @@ api::Result NoticeService::list(const string &keyword, int page, int size)
 
     const char *kWhere =
         "WHERE n.is_deleted = 0 "
-        "AND ($1 = '' OR n.title LIKE $2 OR n.content LIKE $3) ";
+        "AND (? = '' OR n.title LIKE ? OR n.content LIKE ?) ";
 
     try
     {
@@ -61,7 +61,7 @@ api::Result NoticeService::list(const string &keyword, int page, int size)
 
         auto rows = client->execSqlSync(
             string(kSelectPrefix) + kWhere +
-                "ORDER BY n.is_top DESC, n.create_time DESC LIMIT $4 OFFSET $5",
+                "ORDER BY n.is_top DESC, n.create_time DESC LIMIT ? OFFSET ?",
             keyword, pattern, pattern, size, offset);
 
         Json::Value arr(Json::arrayValue);
@@ -131,7 +131,7 @@ api::Result NoticeService::detail(int64_t id)
     try
     {
         auto rows = api::db()->execSqlSync(
-            string(kSelectPrefix) + "WHERE n.id = $1 AND n.is_deleted = 0", id);
+            string(kSelectPrefix) + "WHERE n.id = ? AND n.is_deleted = 0", id);
         if (rows.size() == 0)
             return api::Result::error(api::E_NOT_FOUND, "公告不存在");
         return api::Result::success(model::noticeToJson(rowToNotice(rows[0])));
@@ -148,7 +148,7 @@ api::Result NoticeService::create(const model::Notice &n, int64_t publisherId)
     {
         auto client = api::db();
         client->execSqlSync(
-            "INSERT INTO notices (title, content, publisher_id, is_top) VALUES ($1, $2, $3, $4)",
+            "INSERT INTO notices (title, content, publisher_id, is_top) VALUES (?, ?, ?, ?)",
             n.title, n.content, publisherId, n.isTop ? 1 : 0);
 
         auto idRows = client->execSqlSync("SELECT LAST_INSERT_ID() AS id");
@@ -168,12 +168,12 @@ api::Result NoticeService::update(int64_t id, const model::Notice &n)
     {
         auto client = api::db();
         auto cur = client->execSqlSync(
-            "SELECT id FROM notices WHERE id = $1 AND is_deleted = 0", id);
+            "SELECT id FROM notices WHERE id = ? AND is_deleted = 0", id);
         if (cur.size() == 0)
             return api::Result::error(api::E_NOT_FOUND, "公告不存在");
 
         client->execSqlSync(
-            "UPDATE notices SET title = $1, content = $2, is_top = $3 WHERE id = $4",
+            "UPDATE notices SET title = ?, content = ?, is_top = ? WHERE id = ?",
             n.title, n.content, n.isTop ? 1 : 0, id);
         return api::Result::success(Json::Value(Json::objectValue), "公告修改成功");
     }
@@ -189,11 +189,11 @@ api::Result NoticeService::remove(int64_t id)
     {
         auto client = api::db();
         auto cur = client->execSqlSync(
-            "SELECT id FROM notices WHERE id = $1 AND is_deleted = 0", id);
+            "SELECT id FROM notices WHERE id = ? AND is_deleted = 0", id);
         if (cur.size() == 0)
             return api::Result::error(api::E_NOT_FOUND, "公告不存在");
 
-        client->execSqlSync("UPDATE notices SET is_deleted = 1 WHERE id = $1", id);
+        client->execSqlSync("UPDATE notices SET is_deleted = 1 WHERE id = ?", id);
         return api::Result::success(Json::Value(Json::objectValue), "公告删除成功");
     }
     catch (const exception &e)
@@ -208,11 +208,11 @@ api::Result NoticeService::setTop(int64_t id, bool isTop)
     {
         auto client = api::db();
         auto cur = client->execSqlSync(
-            "SELECT id FROM notices WHERE id = $1 AND is_deleted = 0", id);
+            "SELECT id FROM notices WHERE id = ? AND is_deleted = 0", id);
         if (cur.size() == 0)
             return api::Result::error(api::E_NOT_FOUND, "公告不存在");
 
-        client->execSqlSync("UPDATE notices SET is_top = $1 WHERE id = $2", isTop ? 1 : 0, id);
+        client->execSqlSync("UPDATE notices SET is_top = ? WHERE id = ?", isTop ? 1 : 0, id);
         return api::Result::success(Json::Value(Json::objectValue),
                                     isTop ? "已置顶" : "已取消置顶");
     }

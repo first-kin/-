@@ -1,0 +1,457 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{6B2F74BE-7B1F-359F-B8A4-2B1C52F89D62}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <VcpkgEnabled>false</VcpkgEnabled>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>student_backend</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="do_not_import_user.props" Condition="exists('do_not_import_user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\git\-\高校学生信息管理系统\backend\build\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">student_backend.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">student_backend</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\git\-\高校学生信息管理系统\backend\build\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">student_backend.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">student_backend</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\git\-\高校学生信息管理系统\backend\build\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">student_backend.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">student_backend</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\git\-\高校学生信息管理系统\backend\build\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">student_backend.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">student_backend</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\git\-\高校学生信息管理系统\backend;D:\git\-\高校学生信息管理系统\backend\third_party;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "D:/vcpkg/installed/x64-windows/include" /utf-8</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <BufferSecurityCheck></BufferSecurityCheck>
+      <CallingConvention></CallingConvention>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4251;4275</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <FloatingPointModel></FloatingPointModel>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
+      <UseFullPaths>false</UseFullPaths>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;JWT_DISABLE_PICOJSON;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;JWT_DISABLE_PICOJSON;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\git\-\高校学生信息管理系统\backend;D:\git\-\高校学生信息管理系统\backend\third_party;D:\vcpkg\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\git\-\高校学生信息管理系统\backend;D:\git\-\高校学生信息管理系统\backend\third_party;D:\vcpkg\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <PostBuildEvent>
+      <Message></Message>
+      <Command>setlocal
+D:\vcpkg\vcpkg.exe z-applocal --target-binary=D:/git/-/高校学生信息管理系统/backend/build/Debug/student_backend.exe --installed-bin-dir=D:/vcpkg/installed/x64-windows/debug/bin
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>D:\vcpkg\installed\x64-windows\debug\lib\drogon.lib;D:\vcpkg\installed\x64-windows\debug\lib\libssl.lib;D:\vcpkg\installed\x64-windows\debug\lib\libcrypto.lib;rpcrt4.lib;crypt32.lib;D:\vcpkg\installed\x64-windows\debug\lib\trantor.lib;advapi32.lib;ws2_32.lib;D:\vcpkg\installed\x64-windows\debug\lib\jsoncpp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <DataExecutionPrevention></DataExecutionPrevention>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
+      <ImportLibrary>D:/git/-/高校学生信息管理系统/backend/build/Debug/student_backend.lib</ImportLibrary>
+      <LinkErrorReporting></LinkErrorReporting>
+      <ProgramDataBaseFile>D:/git/-/高校学生信息管理系统/backend/build/Debug/student_backend.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress></RandomizedBaseAddress>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\git\-\高校学生信息管理系统\backend;D:\git\-\高校学生信息管理系统\backend\third_party;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "D:/vcpkg/installed/x64-windows/include" /utf-8</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <BufferSecurityCheck></BufferSecurityCheck>
+      <CallingConvention></CallingConvention>
+      <DisableSpecificWarnings>4251;4275</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <FloatingPointModel></FloatingPointModel>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
+      <UseFullPaths>false</UseFullPaths>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;JWT_DISABLE_PICOJSON;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;JWT_DISABLE_PICOJSON;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\git\-\高校学生信息管理系统\backend;D:\git\-\高校学生信息管理系统\backend\third_party;D:\vcpkg\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\git\-\高校学生信息管理系统\backend;D:\git\-\高校学生信息管理系统\backend\third_party;D:\vcpkg\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <PostBuildEvent>
+      <Message></Message>
+      <Command>setlocal
+D:\vcpkg\vcpkg.exe z-applocal --target-binary=D:/git/-/高校学生信息管理系统/backend/build/Release/student_backend.exe --installed-bin-dir=D:/vcpkg/installed/x64-windows/bin
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>D:\vcpkg\installed\x64-windows\lib\drogon.lib;D:\vcpkg\installed\x64-windows\lib\libssl.lib;D:\vcpkg\installed\x64-windows\lib\libcrypto.lib;rpcrt4.lib;crypt32.lib;D:\vcpkg\installed\x64-windows\lib\trantor.lib;advapi32.lib;ws2_32.lib;D:\vcpkg\installed\x64-windows\debug\lib\jsoncpp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <DataExecutionPrevention></DataExecutionPrevention>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
+      <ImportLibrary>D:/git/-/高校学生信息管理系统/backend/build/Release/student_backend.lib</ImportLibrary>
+      <LinkErrorReporting></LinkErrorReporting>
+      <ProgramDataBaseFile>D:/git/-/高校学生信息管理系统/backend/build/Release/student_backend.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress></RandomizedBaseAddress>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\git\-\高校学生信息管理系统\backend;D:\git\-\高校学生信息管理系统\backend\third_party;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "D:/vcpkg/installed/x64-windows/include" /utf-8</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <BufferSecurityCheck></BufferSecurityCheck>
+      <CallingConvention></CallingConvention>
+      <DisableSpecificWarnings>4251;4275</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <FloatingPointModel></FloatingPointModel>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
+      <UseFullPaths>false</UseFullPaths>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;JWT_DISABLE_PICOJSON;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;JWT_DISABLE_PICOJSON;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\git\-\高校学生信息管理系统\backend;D:\git\-\高校学生信息管理系统\backend\third_party;D:\vcpkg\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\git\-\高校学生信息管理系统\backend;D:\git\-\高校学生信息管理系统\backend\third_party;D:\vcpkg\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <PostBuildEvent>
+      <Message></Message>
+      <Command>setlocal
+D:\vcpkg\vcpkg.exe z-applocal --target-binary=D:/git/-/高校学生信息管理系统/backend/build/MinSizeRel/student_backend.exe --installed-bin-dir=D:/vcpkg/installed/x64-windows/bin
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>D:\vcpkg\installed\x64-windows\lib\drogon.lib;D:\vcpkg\installed\x64-windows\lib\libssl.lib;D:\vcpkg\installed\x64-windows\lib\libcrypto.lib;rpcrt4.lib;crypt32.lib;D:\vcpkg\installed\x64-windows\lib\trantor.lib;advapi32.lib;ws2_32.lib;D:\vcpkg\installed\x64-windows\debug\lib\jsoncpp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <DataExecutionPrevention></DataExecutionPrevention>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
+      <ImportLibrary>D:/git/-/高校学生信息管理系统/backend/build/MinSizeRel/student_backend.lib</ImportLibrary>
+      <LinkErrorReporting></LinkErrorReporting>
+      <ProgramDataBaseFile>D:/git/-/高校学生信息管理系统/backend/build/MinSizeRel/student_backend.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress></RandomizedBaseAddress>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\git\-\高校学生信息管理系统\backend;D:\git\-\高校学生信息管理系统\backend\third_party;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "D:/vcpkg/installed/x64-windows/include" /utf-8</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <BufferSecurityCheck></BufferSecurityCheck>
+      <CallingConvention></CallingConvention>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4251;4275</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <FloatingPointModel></FloatingPointModel>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
+      <UseFullPaths>false</UseFullPaths>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;JWT_DISABLE_PICOJSON;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;JWT_DISABLE_PICOJSON;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\git\-\高校学生信息管理系统\backend;D:\git\-\高校学生信息管理系统\backend\third_party;D:\vcpkg\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\git\-\高校学生信息管理系统\backend;D:\git\-\高校学生信息管理系统\backend\third_party;D:\vcpkg\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <PostBuildEvent>
+      <Message></Message>
+      <Command>setlocal
+D:\vcpkg\vcpkg.exe z-applocal --target-binary=D:/git/-/高校学生信息管理系统/backend/build/RelWithDebInfo/student_backend.exe --installed-bin-dir=D:/vcpkg/installed/x64-windows/bin
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>D:\vcpkg\installed\x64-windows\lib\drogon.lib;D:\vcpkg\installed\x64-windows\lib\libssl.lib;D:\vcpkg\installed\x64-windows\lib\libcrypto.lib;rpcrt4.lib;crypt32.lib;D:\vcpkg\installed\x64-windows\lib\trantor.lib;advapi32.lib;ws2_32.lib;D:\vcpkg\installed\x64-windows\debug\lib\jsoncpp.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <DataExecutionPrevention></DataExecutionPrevention>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers></ImageHasSafeExceptionHandlers>
+      <ImportLibrary>D:/git/-/高校学生信息管理系统/backend/build/RelWithDebInfo/student_backend.lib</ImportLibrary>
+      <LinkErrorReporting></LinkErrorReporting>
+      <ProgramDataBaseFile>D:/git/-/高校学生信息管理系统/backend/build/RelWithDebInfo/student_backend.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress></RandomizedBaseAddress>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\git\-\高校学生信息管理系统\backend\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule D:/git/-/高校学生信息管理系统/backend/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+D:\cmake\bin\cmake.exe -SD:/git/-/高校学生信息管理系统/backend -BD:/git/-/高校学生信息管理系统/backend/build --check-stamp-file D:/git/-/高校学生信息管理系统/backend/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\cmake\share\cmake-4.3\Modules\CMakeCXXInformation.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeCommonLanguageInclude.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeDependentOption.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeFindDependencyMacro.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeGenericSystem.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeInitializeConfigs.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeLanguageInformation.cmake;D:\cmake\share\cmake-4.3\Modules\CMakePushCheckState.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeRCInformation.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeSystemSpecificInformation.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeSystemSpecificInitialize.cmake;D:\cmake\share\cmake-4.3\Modules\CheckCXXSourceCompiles.cmake;D:\cmake\share\cmake-4.3\Modules\CheckCXXSourceRuns.cmake;D:\cmake\share\cmake-4.3\Modules\CheckIncludeFileCXX.cmake;D:\cmake\share\cmake-4.3\Modules\CheckLibraryExists.cmake;D:\cmake\share\cmake-4.3\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\cmake\share\cmake-4.3\Modules\Compiler\MSVC-CXX.cmake;D:\cmake\share\cmake-4.3\Modules\Compiler\MSVC.cmake;D:\cmake\share\cmake-4.3\Modules\FindOpenSSL.cmake;D:\cmake\share\cmake-4.3\Modules\FindPackageHandleStandardArgs.cmake;D:\cmake\share\cmake-4.3\Modules\FindPackageMessage.cmake;D:\cmake\share\cmake-4.3\Modules\FindThreads.cmake;D:\cmake\share\cmake-4.3\Modules\FindZLIB.cmake;D:\cmake\share\cmake-4.3\Modules\Internal\CMakeCXXLinkerInformation.cmake;D:\cmake\share\cmake-4.3\Modules\Internal\CMakeCommonLinkerInformation.cmake;D:\cmake\share\cmake-4.3\Modules\Internal\CheckSourceCompiles.cmake;D:\cmake\share\cmake-4.3\Modules\Internal\CheckSourceRuns.cmake;D:\cmake\share\cmake-4.3\Modules\Linker\MSVC-CXX.cmake;D:\cmake\share\cmake-4.3\Modules\Linker\MSVC.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Windows-Initialize.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Windows-MSVC-CXX.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Windows-MSVC.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Windows.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\WindowsPaths.cmake;D:\cmake\share\cmake-4.3\Modules\SelectLibraryConfigurations.cmake;D:\git\-\高校学生信息管理系统\backend\build\CMakeFiles\4.3.3\CMakeCXXCompiler.cmake;D:\git\-\高校学生信息管理系统\backend\build\CMakeFiles\4.3.3\CMakeRCCompiler.cmake;D:\git\-\高校学生信息管理系统\backend\build\CMakeFiles\4.3.3\CMakeSystem.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-config-version.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-config.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-targets-debug.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-targets-release.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-targets.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonConfig.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonConfigVersion.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonTargets-debug.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonTargets-release.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonTargets.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonUtilities.cmake;D:\vcpkg\installed\x64-windows\share\drogon\FindBrotli.cmake;D:\vcpkg\installed\x64-windows\share\drogon\FindFilesystem.cmake;D:\vcpkg\installed\x64-windows\share\drogon\FindJsoncpp.cmake;D:\vcpkg\installed\x64-windows\share\drogon\ParseAndAddDrogonTests.cmake;D:\vcpkg\installed\x64-windows\share\jwt-cpp\jwt-cpp-config-version.cmake;D:\vcpkg\installed\x64-windows\share\jwt-cpp\jwt-cpp-config.cmake;D:\vcpkg\installed\x64-windows\share\jwt-cpp\jwt-cpp-targets.cmake;D:\vcpkg\installed\x64-windows\share\openssl\vcpkg-cmake-wrapper.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorConfig.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorConfigVersion.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorTargets-debug.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorTargets-release.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorTargets.cmake;D:\vcpkg\installed\x64-windows\share\zlib\vcpkg-cmake-wrapper.cmake;D:\vcpkg\scripts\buildsystems\vcpkg.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\git\-\高校学生信息管理系统\backend\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule D:/git/-/高校学生信息管理系统/backend/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+D:\cmake\bin\cmake.exe -SD:/git/-/高校学生信息管理系统/backend -BD:/git/-/高校学生信息管理系统/backend/build --check-stamp-file D:/git/-/高校学生信息管理系统/backend/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\cmake\share\cmake-4.3\Modules\CMakeCXXInformation.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeCommonLanguageInclude.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeDependentOption.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeFindDependencyMacro.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeGenericSystem.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeInitializeConfigs.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeLanguageInformation.cmake;D:\cmake\share\cmake-4.3\Modules\CMakePushCheckState.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeRCInformation.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeSystemSpecificInformation.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeSystemSpecificInitialize.cmake;D:\cmake\share\cmake-4.3\Modules\CheckCXXSourceCompiles.cmake;D:\cmake\share\cmake-4.3\Modules\CheckCXXSourceRuns.cmake;D:\cmake\share\cmake-4.3\Modules\CheckIncludeFileCXX.cmake;D:\cmake\share\cmake-4.3\Modules\CheckLibraryExists.cmake;D:\cmake\share\cmake-4.3\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\cmake\share\cmake-4.3\Modules\Compiler\MSVC-CXX.cmake;D:\cmake\share\cmake-4.3\Modules\Compiler\MSVC.cmake;D:\cmake\share\cmake-4.3\Modules\FindOpenSSL.cmake;D:\cmake\share\cmake-4.3\Modules\FindPackageHandleStandardArgs.cmake;D:\cmake\share\cmake-4.3\Modules\FindPackageMessage.cmake;D:\cmake\share\cmake-4.3\Modules\FindThreads.cmake;D:\cmake\share\cmake-4.3\Modules\FindZLIB.cmake;D:\cmake\share\cmake-4.3\Modules\Internal\CMakeCXXLinkerInformation.cmake;D:\cmake\share\cmake-4.3\Modules\Internal\CMakeCommonLinkerInformation.cmake;D:\cmake\share\cmake-4.3\Modules\Internal\CheckSourceCompiles.cmake;D:\cmake\share\cmake-4.3\Modules\Internal\CheckSourceRuns.cmake;D:\cmake\share\cmake-4.3\Modules\Linker\MSVC-CXX.cmake;D:\cmake\share\cmake-4.3\Modules\Linker\MSVC.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Windows-Initialize.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Windows-MSVC-CXX.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Windows-MSVC.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Windows.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\WindowsPaths.cmake;D:\cmake\share\cmake-4.3\Modules\SelectLibraryConfigurations.cmake;D:\git\-\高校学生信息管理系统\backend\build\CMakeFiles\4.3.3\CMakeCXXCompiler.cmake;D:\git\-\高校学生信息管理系统\backend\build\CMakeFiles\4.3.3\CMakeRCCompiler.cmake;D:\git\-\高校学生信息管理系统\backend\build\CMakeFiles\4.3.3\CMakeSystem.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-config-version.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-config.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-targets-debug.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-targets-release.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-targets.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonConfig.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonConfigVersion.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonTargets-debug.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonTargets-release.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonTargets.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonUtilities.cmake;D:\vcpkg\installed\x64-windows\share\drogon\FindBrotli.cmake;D:\vcpkg\installed\x64-windows\share\drogon\FindFilesystem.cmake;D:\vcpkg\installed\x64-windows\share\drogon\FindJsoncpp.cmake;D:\vcpkg\installed\x64-windows\share\drogon\ParseAndAddDrogonTests.cmake;D:\vcpkg\installed\x64-windows\share\jwt-cpp\jwt-cpp-config-version.cmake;D:\vcpkg\installed\x64-windows\share\jwt-cpp\jwt-cpp-config.cmake;D:\vcpkg\installed\x64-windows\share\jwt-cpp\jwt-cpp-targets.cmake;D:\vcpkg\installed\x64-windows\share\openssl\vcpkg-cmake-wrapper.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorConfig.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorConfigVersion.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorTargets-debug.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorTargets-release.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorTargets.cmake;D:\vcpkg\installed\x64-windows\share\zlib\vcpkg-cmake-wrapper.cmake;D:\vcpkg\scripts\buildsystems\vcpkg.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\git\-\高校学生信息管理系统\backend\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule D:/git/-/高校学生信息管理系统/backend/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+D:\cmake\bin\cmake.exe -SD:/git/-/高校学生信息管理系统/backend -BD:/git/-/高校学生信息管理系统/backend/build --check-stamp-file D:/git/-/高校学生信息管理系统/backend/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\cmake\share\cmake-4.3\Modules\CMakeCXXInformation.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeCommonLanguageInclude.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeDependentOption.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeFindDependencyMacro.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeGenericSystem.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeInitializeConfigs.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeLanguageInformation.cmake;D:\cmake\share\cmake-4.3\Modules\CMakePushCheckState.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeRCInformation.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeSystemSpecificInformation.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeSystemSpecificInitialize.cmake;D:\cmake\share\cmake-4.3\Modules\CheckCXXSourceCompiles.cmake;D:\cmake\share\cmake-4.3\Modules\CheckCXXSourceRuns.cmake;D:\cmake\share\cmake-4.3\Modules\CheckIncludeFileCXX.cmake;D:\cmake\share\cmake-4.3\Modules\CheckLibraryExists.cmake;D:\cmake\share\cmake-4.3\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\cmake\share\cmake-4.3\Modules\Compiler\MSVC-CXX.cmake;D:\cmake\share\cmake-4.3\Modules\Compiler\MSVC.cmake;D:\cmake\share\cmake-4.3\Modules\FindOpenSSL.cmake;D:\cmake\share\cmake-4.3\Modules\FindPackageHandleStandardArgs.cmake;D:\cmake\share\cmake-4.3\Modules\FindPackageMessage.cmake;D:\cmake\share\cmake-4.3\Modules\FindThreads.cmake;D:\cmake\share\cmake-4.3\Modules\FindZLIB.cmake;D:\cmake\share\cmake-4.3\Modules\Internal\CMakeCXXLinkerInformation.cmake;D:\cmake\share\cmake-4.3\Modules\Internal\CMakeCommonLinkerInformation.cmake;D:\cmake\share\cmake-4.3\Modules\Internal\CheckSourceCompiles.cmake;D:\cmake\share\cmake-4.3\Modules\Internal\CheckSourceRuns.cmake;D:\cmake\share\cmake-4.3\Modules\Linker\MSVC-CXX.cmake;D:\cmake\share\cmake-4.3\Modules\Linker\MSVC.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Windows-Initialize.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Windows-MSVC-CXX.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Windows-MSVC.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Windows.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\WindowsPaths.cmake;D:\cmake\share\cmake-4.3\Modules\SelectLibraryConfigurations.cmake;D:\git\-\高校学生信息管理系统\backend\build\CMakeFiles\4.3.3\CMakeCXXCompiler.cmake;D:\git\-\高校学生信息管理系统\backend\build\CMakeFiles\4.3.3\CMakeRCCompiler.cmake;D:\git\-\高校学生信息管理系统\backend\build\CMakeFiles\4.3.3\CMakeSystem.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-config-version.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-config.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-targets-debug.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-targets-release.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-targets.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonConfig.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonConfigVersion.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonTargets-debug.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonTargets-release.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonTargets.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonUtilities.cmake;D:\vcpkg\installed\x64-windows\share\drogon\FindBrotli.cmake;D:\vcpkg\installed\x64-windows\share\drogon\FindFilesystem.cmake;D:\vcpkg\installed\x64-windows\share\drogon\FindJsoncpp.cmake;D:\vcpkg\installed\x64-windows\share\drogon\ParseAndAddDrogonTests.cmake;D:\vcpkg\installed\x64-windows\share\jwt-cpp\jwt-cpp-config-version.cmake;D:\vcpkg\installed\x64-windows\share\jwt-cpp\jwt-cpp-config.cmake;D:\vcpkg\installed\x64-windows\share\jwt-cpp\jwt-cpp-targets.cmake;D:\vcpkg\installed\x64-windows\share\openssl\vcpkg-cmake-wrapper.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorConfig.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorConfigVersion.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorTargets-debug.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorTargets-release.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorTargets.cmake;D:\vcpkg\installed\x64-windows\share\zlib\vcpkg-cmake-wrapper.cmake;D:\vcpkg\scripts\buildsystems\vcpkg.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\git\-\高校学生信息管理系统\backend\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule D:/git/-/高校学生信息管理系统/backend/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+D:\cmake\bin\cmake.exe -SD:/git/-/高校学生信息管理系统/backend -BD:/git/-/高校学生信息管理系统/backend/build --check-stamp-file D:/git/-/高校学生信息管理系统/backend/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\cmake\share\cmake-4.3\Modules\CMakeCXXInformation.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeCommonLanguageInclude.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeDependentOption.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeFindDependencyMacro.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeGenericSystem.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeInitializeConfigs.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeLanguageInformation.cmake;D:\cmake\share\cmake-4.3\Modules\CMakePushCheckState.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeRCInformation.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeSystemSpecificInformation.cmake;D:\cmake\share\cmake-4.3\Modules\CMakeSystemSpecificInitialize.cmake;D:\cmake\share\cmake-4.3\Modules\CheckCXXSourceCompiles.cmake;D:\cmake\share\cmake-4.3\Modules\CheckCXXSourceRuns.cmake;D:\cmake\share\cmake-4.3\Modules\CheckIncludeFileCXX.cmake;D:\cmake\share\cmake-4.3\Modules\CheckLibraryExists.cmake;D:\cmake\share\cmake-4.3\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\cmake\share\cmake-4.3\Modules\Compiler\MSVC-CXX.cmake;D:\cmake\share\cmake-4.3\Modules\Compiler\MSVC.cmake;D:\cmake\share\cmake-4.3\Modules\FindOpenSSL.cmake;D:\cmake\share\cmake-4.3\Modules\FindPackageHandleStandardArgs.cmake;D:\cmake\share\cmake-4.3\Modules\FindPackageMessage.cmake;D:\cmake\share\cmake-4.3\Modules\FindThreads.cmake;D:\cmake\share\cmake-4.3\Modules\FindZLIB.cmake;D:\cmake\share\cmake-4.3\Modules\Internal\CMakeCXXLinkerInformation.cmake;D:\cmake\share\cmake-4.3\Modules\Internal\CMakeCommonLinkerInformation.cmake;D:\cmake\share\cmake-4.3\Modules\Internal\CheckSourceCompiles.cmake;D:\cmake\share\cmake-4.3\Modules\Internal\CheckSourceRuns.cmake;D:\cmake\share\cmake-4.3\Modules\Linker\MSVC-CXX.cmake;D:\cmake\share\cmake-4.3\Modules\Linker\MSVC.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Windows-Initialize.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Windows-MSVC-CXX.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Windows-MSVC.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\Windows.cmake;D:\cmake\share\cmake-4.3\Modules\Platform\WindowsPaths.cmake;D:\cmake\share\cmake-4.3\Modules\SelectLibraryConfigurations.cmake;D:\git\-\高校学生信息管理系统\backend\build\CMakeFiles\4.3.3\CMakeCXXCompiler.cmake;D:\git\-\高校学生信息管理系统\backend\build\CMakeFiles\4.3.3\CMakeRCCompiler.cmake;D:\git\-\高校学生信息管理系统\backend\build\CMakeFiles\4.3.3\CMakeSystem.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-config-version.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-config.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-targets-debug.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-targets-release.cmake;D:\vcpkg\installed\x64-windows\share\c-ares\c-ares-targets.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonConfig.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonConfigVersion.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonTargets-debug.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonTargets-release.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonTargets.cmake;D:\vcpkg\installed\x64-windows\share\drogon\DrogonUtilities.cmake;D:\vcpkg\installed\x64-windows\share\drogon\FindBrotli.cmake;D:\vcpkg\installed\x64-windows\share\drogon\FindFilesystem.cmake;D:\vcpkg\installed\x64-windows\share\drogon\FindJsoncpp.cmake;D:\vcpkg\installed\x64-windows\share\drogon\ParseAndAddDrogonTests.cmake;D:\vcpkg\installed\x64-windows\share\jwt-cpp\jwt-cpp-config-version.cmake;D:\vcpkg\installed\x64-windows\share\jwt-cpp\jwt-cpp-config.cmake;D:\vcpkg\installed\x64-windows\share\jwt-cpp\jwt-cpp-targets.cmake;D:\vcpkg\installed\x64-windows\share\openssl\vcpkg-cmake-wrapper.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorConfig.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorConfigVersion.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorTargets-debug.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorTargets-release.cmake;D:\vcpkg\installed\x64-windows\share\trantor\TrantorTargets.cmake;D:\vcpkg\installed\x64-windows\share\zlib\vcpkg-cmake-wrapper.cmake;D:\vcpkg\scripts\buildsystems\vcpkg.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\git\-\高校学生信息管理系统\backend\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="D:\git\-\高校学生信息管理系统\backend\main.cpp" />
+    <ClCompile Include="D:\git\-\高校学生信息管理系统\backend\controllers\AuthController.cpp" />
+    <ClCompile Include="D:\git\-\高校学生信息管理系统\backend\controllers\NoticeController.cpp" />
+    <ClCompile Include="D:\git\-\高校学生信息管理系统\backend\controllers\StudentController.cpp" />
+    <ClCompile Include="D:\git\-\高校学生信息管理系统\backend\controllers\TeacherController.cpp" />
+    <ClCompile Include="D:\git\-\高校学生信息管理系统\backend\controllers\CourseController.cpp" />
+    <ClCompile Include="D:\git\-\高校学生信息管理系统\backend\controllers\DeptController.cpp" />
+    <ClCompile Include="D:\git\-\高校学生信息管理系统\backend\controllers\ScoreController.cpp" />
+    <ClCompile Include="D:\git\-\高校学生信息管理系统\backend\controllers\UserController.cpp" />
+    <ClCompile Include="D:\git\-\高校学生信息管理系统\backend\filters\JwtFilter.cpp" />
+    <ClCompile Include="D:\git\-\高校学生信息管理系统\backend\services\CourseService.cpp" />
+    <ClCompile Include="D:\git\-\高校学生信息管理系统\backend\services\DeptService.cpp" />
+    <ClCompile Include="D:\git\-\高校学生信息管理系统\backend\services\NoticeService.cpp" />
+    <ClCompile Include="D:\git\-\高校学生信息管理系统\backend\services\ScoreService.cpp" />
+    <ClCompile Include="D:\git\-\高校学生信息管理系统\backend\services\StudentService.cpp" />
+    <ClCompile Include="D:\git\-\高校学生信息管理系统\backend\services\TeacherService.cpp" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="D:\git\-\高校学生信息管理系统\backend\build\ZERO_CHECK.vcxproj">
+      <Project>{34AFC279-AF63-3116-8F56-B518B000C63E}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

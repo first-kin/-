@@ -1,7 +1,7 @@
 #pragma once
 #include <cstddef>  // size_t
 
-using namespace std;
+using std::size_t;
 
 template <typename T>
 class LinkedList

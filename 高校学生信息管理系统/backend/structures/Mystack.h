@@ -2,7 +2,8 @@
 #include <cstddef>      // size_t
 #include <stdexcept>    // underflow_error
 
-using namespace std;
+using std::size_t;
+using std::underflow_error;
 
 // 栈:后进先出(LIFO),底层为动态数组
 template <typename T>

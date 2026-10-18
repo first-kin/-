@@ -1,0 +1,10 @@
+^D:\GIT\-\高校学生信息管理系统\BACKEND\BUILD\CMAKEFILES\B25DD6BFB963AC02C4E4F728538C6C18\GENERATE.STAMP.RULE
+setlocal
+D:\cmake\bin\cmake.exe -SD:/git/-/高校学生信息管理系统/backend -BD:/git/-/高校学生信息管理系统/backend/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/git/-/高校学生信息管理系统/backend/build/student_backend.slnx
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

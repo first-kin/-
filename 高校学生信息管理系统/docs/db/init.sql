@@ -10,7 +10,7 @@ USE student_mgmt;
 CREATE TABLE users (
   id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   username        VARCHAR(50)  NOT NULL COMMENT '登录名',
-  password        CHAR(60)     NOT NULL COMMENT 'BCrypt散列,固定60字符',
+  password        VARCHAR(200) NOT NULL COMMENT 'PBKDF2-HMAC-SHA256散列串:pbkdf2$iter$salt$hash',
   role            ENUM('admin','teacher','student') NOT NULL COMMENT '角色',
   status          TINYINT      NOT NULL DEFAULT 1 COMMENT '1启用 0禁用',
   last_login_time DATETIME     NULL,
@@ -150,8 +150,9 @@ CREATE TABLE logs (
 
 -- ============================================================
 -- 初始管理员账号 admin
--- 密码为 password 的 BCrypt 散列(示例),首次登录后请立即修改
--- 如需自定义初始密码,用后端 bcrypt 库生成后替换下方字符串
+-- 密码为 password 的 PBKDF2-HMAC-SHA256 散列(固定盐种子,仅初始账号)
+-- 格式: pbkdf2$<迭代次数>$<盐hex>$<摘要hex>；首次登录后请立即修改密码
+-- 如需自定义初始密码,用后端 util::hashPassword 生成后替换下方字符串
 -- ============================================================
 INSERT INTO users (username, password, role)
-VALUES ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
+VALUES ('admin', 'pbkdf2$10000$3fa9b2c8d4e5f60718293a4b5c6d7e8f$d8502eac06243c7411dc71a33951663e2d299b6500f91cbccdff0bfccba38a4f', 'admin');

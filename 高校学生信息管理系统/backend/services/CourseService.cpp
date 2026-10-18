@@ -19,12 +19,12 @@ const char *kSelectPrefix =
     "       DATE_FORMAT(c.create_time, '%Y-%m-%d %H:%i:%s') AS create_time "
     "FROM courses c LEFT JOIN teachers t ON c.teacher_id = t.id ";
 
-// 筛选条件(占位符不重复使用，编号连续)：$1 keyword, $2/$3 模糊串, $4/$5 学期, $6/$7 教师
+// 筛选条件(占位符不重复使用，编号连续)：? keyword, ?/? 模糊串, ?/? 学期, ?/? 教师
 const char *kWhereClause =
     "WHERE c.is_deleted = 0 "
-    "AND ($1 = '' OR c.course_name LIKE $2 OR IFNULL(t.name, '') LIKE $3) "
-    "AND ($4 = '' OR IFNULL(c.semester, '') = $5) "
-    "AND ($6 = 0 OR c.teacher_id = $7) ";
+    "AND (? = '' OR c.course_name LIKE ? OR IFNULL(t.name, '') LIKE ?) "
+    "AND (? = '' OR IFNULL(c.semester, '') = ?) "
+    "AND (? = 0 OR c.teacher_id = ?) ";
 
 model::Course rowToCourse(const drogon::orm::Row &row)
 {
@@ -65,7 +65,7 @@ api::Result CourseService::list(const string &keyword, int page, int size,
 
         auto rows = client->execSqlSync(
             string(kSelectPrefix) + kWhereClause +
-                "ORDER BY c.id DESC LIMIT $8 OFFSET $9",
+                "ORDER BY c.id DESC LIMIT ? OFFSET ?",
             keyword, pattern, pattern, semester, semester, teacherId, teacherId, size, offset);
 
         // 用手写单链表承载结果集(头插)，再遍历序列化
@@ -94,7 +94,7 @@ api::Result CourseService::detail(int64_t id)
     try
     {
         auto rows = api::db()->execSqlSync(
-            string(kSelectPrefix) + "WHERE c.id = $1 AND c.is_deleted = 0", id);
+            string(kSelectPrefix) + "WHERE c.id = ? AND c.is_deleted = 0", id);
         if (rows.size() == 0)
             return api::Result::error(api::E_NOT_FOUND, "课程不存在");
         return api::Result::success(model::courseToJson(rowToCourse(rows[0])));
@@ -112,14 +112,14 @@ api::Result CourseService::create(const model::Course &c)
         auto client = api::db();
 
         auto dup = client->execSqlSync(
-            "SELECT id FROM courses WHERE course_name = $1 AND is_deleted = 0", c.courseName);
+            "SELECT id FROM courses WHERE course_name = ? AND is_deleted = 0", c.courseName);
         if (dup.size() > 0)
             return api::Result::error(api::E_CONFLICT, "课程名已存在");
 
         if (c.teacherId > 0)
         {
             auto t = client->execSqlSync(
-                "SELECT id FROM teachers WHERE id = $1 AND is_deleted = 0", c.teacherId);
+                "SELECT id FROM teachers WHERE id = ? AND is_deleted = 0", c.teacherId);
             if (t.size() == 0)
                 return api::Result::error(api::E_PARAM, "指定的授课教师不存在");
         }
@@ -129,14 +129,14 @@ api::Result CourseService::create(const model::Course &c)
         {
             client->execSqlSync(
                 "INSERT INTO courses (course_name, credit, teacher_id, semester, course_time) "
-                "VALUES ($1, $2, $3, $4, $5)",
+                "VALUES (?, ?, ?, ?, ?)",
                 c.courseName, c.credit, c.teacherId, c.semester, c.courseTime);
         }
         else
         {
             client->execSqlSync(
                 "INSERT INTO courses (course_name, credit, semester, course_time) "
-                "VALUES ($1, $2, $3, $4)",
+                "VALUES (?, ?, ?, ?)",
                 c.courseName, c.credit, c.semester, c.courseTime);
         }
 
@@ -158,12 +158,12 @@ api::Result CourseService::update(int64_t id, const model::Course &c)
         auto client = api::db();
 
         auto cur = client->execSqlSync(
-            "SELECT id FROM courses WHERE id = $1 AND is_deleted = 0", id);
+            "SELECT id FROM courses WHERE id = ? AND is_deleted = 0", id);
         if (cur.size() == 0)
             return api::Result::error(api::E_NOT_FOUND, "课程不存在");
 
         auto dup = client->execSqlSync(
-            "SELECT id FROM courses WHERE course_name = $1 AND is_deleted = 0 AND id <> $2",
+            "SELECT id FROM courses WHERE course_name = ? AND is_deleted = 0 AND id <> ?",
             c.courseName, id);
         if (dup.size() > 0)
             return api::Result::error(api::E_CONFLICT, "课程名已存在");
@@ -171,20 +171,20 @@ api::Result CourseService::update(int64_t id, const model::Course &c)
         if (c.teacherId > 0)
         {
             auto t = client->execSqlSync(
-                "SELECT id FROM teachers WHERE id = $1 AND is_deleted = 0", c.teacherId);
+                "SELECT id FROM teachers WHERE id = ? AND is_deleted = 0", c.teacherId);
             if (t.size() == 0)
                 return api::Result::error(api::E_PARAM, "指定的授课教师不存在");
 
             client->execSqlSync(
-                "UPDATE courses SET course_name = $1, credit = $2, teacher_id = $3, "
-                "semester = $4, course_time = $5 WHERE id = $6",
+                "UPDATE courses SET course_name = ?, credit = ?, teacher_id = ?, "
+                "semester = ?, course_time = ? WHERE id = ?",
                 c.courseName, c.credit, c.teacherId, c.semester, c.courseTime, id);
         }
         else
         {
             client->execSqlSync(
-                "UPDATE courses SET course_name = $1, credit = $2, teacher_id = NULL, "
-                "semester = $3, course_time = $4 WHERE id = $5",
+                "UPDATE courses SET course_name = ?, credit = ?, teacher_id = NULL, "
+                "semester = ?, course_time = ? WHERE id = ?",
                 c.courseName, c.credit, c.semester, c.courseTime, id);
         }
 
@@ -203,17 +203,17 @@ api::Result CourseService::remove(int64_t id)
         auto client = api::db();
 
         auto cur = client->execSqlSync(
-            "SELECT id FROM courses WHERE id = $1 AND is_deleted = 0", id);
+            "SELECT id FROM courses WHERE id = ? AND is_deleted = 0", id);
         if (cur.size() == 0)
             return api::Result::error(api::E_NOT_FOUND, "课程不存在");
 
         // CRS-03：已有成绩记录的课程禁止删除
         auto cnt = client->execSqlSync(
-            "SELECT COUNT(*) AS n FROM scores WHERE course_id = $1", id);
+            "SELECT COUNT(*) AS n FROM scores WHERE course_id = ?", id);
         if (cnt[0]["n"].as<int64_t>() > 0)
             return api::Result::error(api::E_CONFLICT, "该课程已有成绩记录，禁止删除");
 
-        client->execSqlSync("UPDATE courses SET is_deleted = 1 WHERE id = $1", id);
+        client->execSqlSync("UPDATE courses SET is_deleted = 1 WHERE id = ?", id);
         return api::Result::success(Json::Value(Json::objectValue), "删除课程成功");
     }
     catch (const exception &e)

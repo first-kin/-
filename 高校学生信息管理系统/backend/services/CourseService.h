@@ -6,7 +6,7 @@
 #include "models/Course.h"
 #include "utils/Result.h"
 
-using namespace std;
+using std::string;
 
 namespace svc
 {

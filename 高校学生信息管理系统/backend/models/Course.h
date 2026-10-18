@@ -4,7 +4,8 @@
 #include <string>
 
 #include <json/json.h>
-using namespace std;
+
+using std::string;
 
 namespace model
 {

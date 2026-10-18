@@ -1,6 +1,7 @@
 #include <drogon/HttpController.h>
 #include <drogon/HttpRequest.h>
 #include <drogon/HttpResponse.h>
+#include <drogon/MultiPart.h>
 
 #include <string>
 
@@ -59,7 +60,7 @@ public:
         {
             // 学生只能查本人：请求 id 必须是自己的学生档案 id
             auto self = api::db()->execSqlSync(
-                "SELECT id FROM students WHERE user_id = $1 AND is_deleted = 0 LIMIT 1",
+                "SELECT id FROM students WHERE user_id = ? AND is_deleted = 0 LIMIT 1",
                 api::currentUid(req));
             if (self.empty() || self[0]["id"].as<int64_t>() != id)
             {
@@ -130,13 +131,23 @@ public:
             callback(api::toResponse(util::fail(util::kNoPerm, "无权限访问该资源")));
             return;
         }
-        auto file = req->getUploadedFile("file");
-        if (file == nullptr || file->fileContent().empty())
+        // Drogon 1.9 服务端需手动解析 multipart/form-data
+        drogon::MultiPartParser parser;
+        if (parser.parse(req) != 0 || parser.getFiles().empty())
         {
             callback(api::toResponse(util::fail(util::kParam, "请上传要导入的文件")));
             return;
         }
-        auto result = svc::StudentService::importCsv(file->fileContent());
+        // 取字段名为 file 的上传项；缺省时退回第一个文件
+        const auto &filesMap = parser.getFilesMap();
+        const auto it = filesMap.find("file");
+        const drogon::HttpFile &file = it != filesMap.end() ? it->second : parser.getFiles().front();
+        if (file.fileContent().empty())
+        {
+            callback(api::toResponse(util::fail(util::kParam, "上传的文件内容为空")));
+            return;
+        }
+        auto result = svc::StudentService::importCsv(string(file.fileContent()));
         callback(api::toResponse(result));
     }
 
