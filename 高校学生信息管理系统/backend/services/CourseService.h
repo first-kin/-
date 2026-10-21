@@ -17,9 +17,10 @@ namespace svc
 class CourseService
 {
 public:
-    // 分页列表：keyword 匹配课程名/教师名；teacherId>0 时仅看该教师课程
+    // 分页列表：keyword 匹配课程名/教师名；teacherId>0 时仅看该教师课程；
+    // classId>0 时仅看该班级开设的课程（学生端按本班过滤用）
     static api::Result list(const string &keyword, int page, int size,
-                            int64_t teacherId, const string &semester);
+                            int64_t teacherId, const string &semester, int64_t classId);
 
     static api::Result detail(int64_t id);
     static api::Result create(const model::Course &c);

@@ -27,6 +27,8 @@ struct ClassRow
     int64_t id = 0;
     string className;
     int64_t majorId = 0;
+    string majorName;
+    string deptName;
     int grade = 0;
     int64_t headTeacherId = 0;
 };
@@ -45,6 +47,8 @@ Json::Value classToJson(const ClassRow &c)
     j["id"] = static_cast<Json::Int64>(c.id);
     j["className"] = c.className;
     j["majorId"] = static_cast<Json::Int64>(c.majorId);
+    j["majorName"] = c.majorName;
+    j["deptName"] = c.deptName;
     j["grade"] = c.grade;
     if (c.headTeacherId > 0)
         j["headTeacherId"] = static_cast<Json::Int64>(c.headTeacherId);
@@ -199,8 +203,11 @@ api::Result DeptService::classList(int64_t majorId)
     try
     {
         auto rows = api::db()->execSqlSync(
-            "SELECT id, class_name, major_id, grade, head_teacher_id "
-            "FROM classes WHERE (? = 0 OR major_id = ?) ORDER BY id",
+            "SELECT c.id, c.class_name, c.major_id, m.major_name, d.dept_name, c.grade, c.head_teacher_id "
+            "FROM classes c "
+            "JOIN majors m ON m.id = c.major_id "
+            "JOIN departments d ON d.id = m.dept_id "
+            "WHERE (? = 0 OR c.major_id = ?) ORDER BY c.id",
             majorId, majorId);
 
         // LinkedList 头插暂存班级行，forEach 倒序回填还原查询顺序
@@ -212,6 +219,8 @@ api::Result DeptService::classList(int64_t majorId)
             c.id = row["id"].as<int64_t>();
             c.className = row["class_name"].as<string>();
             c.majorId = row["major_id"].as<int64_t>();
+            c.majorName = row["major_name"].as<string>();
+            c.deptName = row["dept_name"].as<string>();
             c.grade = row["grade"].as<int>();
             c.headTeacherId = row["head_teacher_id"].isNull()
                                   ? 0
@@ -321,7 +330,7 @@ api::Result DeptService::classUpdate(int64_t id, const Json::Value &body)
         auto res = client->execSqlSync(
             "UPDATE classes SET class_name = ?, major_id = ?, grade = ?, "
             "head_teacher_id = NULLIF(?, 0) WHERE id = ?",
-            id, className, majorId, grade, headTeacherId);
+            className, majorId, grade, headTeacherId, id);
         if (res.affectedRows() == 0)
             return util::fail(util::kNotFound, "班级不存在");
         return util::okMsg("保存成功");

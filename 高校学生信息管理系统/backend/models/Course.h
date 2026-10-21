@@ -18,6 +18,8 @@ struct Course
     double credit = 0.0;
     int64_t teacherId = 0;  // 0 表示未指定授课教师
     string teacherName;
+    int64_t classId = 0;    // 0 表示未指定开设班级
+    string className;
     string semester;
     string courseTime;
     string createTime;
@@ -86,6 +88,19 @@ inline bool courseFromJson(const Json::Value &j, Course &c, string &err)
         }
     }
 
+    if (j.isMember("classId"))
+    {
+        if (j["classId"].isNull())
+            c.classId = 0;
+        else if (j["classId"].isIntegral())
+            c.classId = j["classId"].asInt64();
+        else
+        {
+            err = "classId 必须为整数";
+            return false;
+        }
+    }
+
     if (j.isMember("semester") && j["semester"].isString())
         c.semester = j["semester"].asString();
 
@@ -103,6 +118,8 @@ inline Json::Value courseToJson(const Course &c)
     j["credit"] = c.credit;
     j["teacherId"] = static_cast<Json::Int64>(c.teacherId);
     j["teacherName"] = c.teacherName;
+    j["classId"] = static_cast<Json::Int64>(c.classId);
+    j["className"] = c.className;
     j["semester"] = c.semester;
     j["courseTime"] = c.courseTime;
     j["createTime"] = c.createTime;

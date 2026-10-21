@@ -6,6 +6,7 @@
 
 #include "models/Course.h"
 #include "services/CourseService.h"
+#include "utils/Db.h"
 #include "utils/Response.h"
 using namespace std;
 
@@ -86,14 +87,30 @@ public:
         else
             teacherFilter = toInt64(req->getParameter("teacherId"), 0);
 
+        // 学生只能看到本班开设的课程：users.id -> students.class_id
+        int64_t classFilter = 0;
+        if (role == "student")
+        {
+            auto rows = api::db()->execSqlSync(
+                "SELECT class_id FROM students WHERE user_id = ? AND is_deleted = 0 LIMIT 1", uid);
+            // 未分班的学生用 -1 过滤，查不到任何课程
+            classFilter = (!rows.empty() && !rows[0]["class_id"].isNull())
+                              ? rows[0]["class_id"].as<int64_t>()
+                              : -1;
+        }
+        else
+        {
+            classFilter = toInt64(req->getParameter("classId"), 0);
+        }
+
         callback(api::toResponse(
-            svc::CourseService::list(keyword, page, size, teacherFilter, semester)));
+            svc::CourseService::list(keyword, page, size, teacherFilter, semester, classFilter)));
     }
 
     // GET /api/courses/{id}
-    void detail(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback) const
+    void detail(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback,
+                int64_t id) const
     {
-        const int64_t id = toInt64(req->getParameter("id"), 0);
         if (id <= 0)
         {
             callback(api::toResponse(api::Result::error(api::E_PARAM, "id 非法")));
@@ -125,12 +142,12 @@ public:
     }
 
     // PUT /api/courses/{id}（全量更新）
-    void update(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback) const
+    void update(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback,
+                int64_t id) const
     {
         if (!requireRole(req, callback, "admin", "仅管理员可修改课程"))
             return;
 
-        const int64_t id = toInt64(req->getParameter("id"), 0);
         if (id <= 0)
         {
             callback(api::toResponse(api::Result::error(api::E_PARAM, "id 非法")));
@@ -154,12 +171,12 @@ public:
     }
 
     // DELETE /api/courses/{id}
-    void remove(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback) const
+    void remove(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback,
+                int64_t id) const
     {
         if (!requireRole(req, callback, "admin", "仅管理员可删除课程"))
             return;
 
-        const int64_t id = toInt64(req->getParameter("id"), 0);
         if (id <= 0)
         {
             callback(api::toResponse(api::Result::error(api::E_PARAM, "id 非法")));

@@ -100,12 +100,12 @@ public:
                 api::db()->execSqlSync(
                     "UPDATE teachers SET phone = NULLIF(?,''), email = NULLIF(?,'') "
                     "WHERE user_id = ? AND is_deleted = 0",
-                    api::currentUid(req), phone, email);
+                    phone, email, api::currentUid(req));
             else
                 api::db()->execSqlSync(
                     "UPDATE students SET phone = NULLIF(?,''), email = NULLIF(?,'') "
                     "WHERE user_id = ? AND is_deleted = 0",
-                    api::currentUid(req), phone, email);
+                    phone, email, api::currentUid(req));
             callback(api::toResponse(api::Result::success(Json::Value(Json::nullValue), "资料更新成功")));
         }
         catch (const exception &e)
@@ -150,7 +150,7 @@ public:
             }
             api::db()->execSqlSync(
                 "UPDATE users SET password = ? WHERE id = ?",
-                api::currentUid(req), util::hashPassword(newPwd));
+                util::hashPassword(newPwd), api::currentUid(req));
             callback(api::toResponse(api::Result::success(Json::Value(Json::nullValue), "密码修改成功")));
         }
         catch (const exception &e)

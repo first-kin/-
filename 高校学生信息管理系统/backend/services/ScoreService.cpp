@@ -28,7 +28,7 @@ double round2(double v)
 
 const char *kScoreSelect =
     "SELECT sc.id, sc.student_id, s.student_no, s.name AS student_name, "
-    "       sc.course_id, c.course_name, sc.score, sc.status, "
+    "       sc.course_id, c.course_name, c.credit, sc.score, sc.status, "
     "       DATE_FORMAT(sc.exam_time, '%Y-%m-%d') AS exam_time "
     "FROM scores sc "
     "JOIN students s ON sc.student_id = s.id "
@@ -43,6 +43,7 @@ model::Score rowToScore(const drogon::orm::Row &row)
     s.studentName = row["student_name"].isNull() ? "" : row["student_name"].as<string>();
     s.courseId = row["course_id"].as<int64_t>();
     s.courseName = row["course_name"].isNull() ? "" : row["course_name"].as<string>();
+    s.credit = row["credit"].isNull() ? 0.0 : row["credit"].as<double>();
     s.hasScore = !row["score"].isNull();
     s.score = s.hasScore ? row["score"].as<double>() : 0.0;
     s.status = row["status"].as<int>();
@@ -108,7 +109,7 @@ api::Result ScoreService::myScores(int64_t userId, const string &semester)
 {
     const char *kSql =
         "SELECT sc.id, sc.student_id, s.student_no, s.name AS student_name, "
-        "       sc.course_id, c.course_name, sc.score, sc.status, "
+        "       sc.course_id, c.course_name, c.credit, sc.score, sc.status, "
         "       DATE_FORMAT(sc.exam_time, '%Y-%m-%d') AS exam_time "
         "FROM scores sc "
         "JOIN students s ON sc.student_id = s.id "
@@ -317,7 +318,7 @@ api::Result ScoreService::statistics(int64_t courseId, int64_t teacherScope)
         for (size_t i = 0; i < bins.size(); ++i)
         {
             Json::Value item(Json::objectValue);
-            item["range"] = labels[i];
+            item["segment"] = labels[i];
             item["count"] = bins[i];
             dist.append(item);
         }
@@ -329,11 +330,12 @@ api::Result ScoreService::statistics(int64_t courseId, int64_t teacherScope)
         data["scored"] = static_cast<Json::Int64>(scored);
         data["absent"] = row["absent_cnt"].isNull() ? 0 : row["absent_cnt"].as<int>();
         data["deferred"] = row["deferred_cnt"].isNull() ? 0 : row["deferred_cnt"].as<int>();
-        data["avg"] = scored > 0 ? round2(avg) : 0.0;
-        data["max"] = scored > 0 ? maxScore : 0.0;
-        data["min"] = scored > 0 ? minScore : 0.0;
+        data["avgScore"] = scored > 0 ? round2(avg) : 0.0;
+        data["maxScore"] = scored > 0 ? maxScore : 0.0;
+        data["minScore"] = scored > 0 ? minScore : 0.0;
+        // 与接口文档一致：及格率为 0~1 的小数，由前端格式化为百分比
         data["passRate"] =
-            scored > 0 ? round2(static_cast<double>(passCnt) * 100.0 / scored) : 0.0;
+            scored > 0 ? round2(static_cast<double>(passCnt) / scored) : 0.0;
         data["distribution"] = dist;
         return api::Result::success(data);
     }

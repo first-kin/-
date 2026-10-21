@@ -15,16 +15,20 @@ namespace
 // 统一的课程查询列(含教师名联表、时间格式化)
 const char *kSelectPrefix =
     "SELECT c.id, c.course_name, c.credit, c.teacher_id, t.name AS teacher_name, "
+    "       c.class_id, cl.class_name, "
     "       c.semester, c.course_time, "
     "       DATE_FORMAT(c.create_time, '%Y-%m-%d %H:%i:%s') AS create_time "
-    "FROM courses c LEFT JOIN teachers t ON c.teacher_id = t.id ";
+    "FROM courses c LEFT JOIN teachers t ON c.teacher_id = t.id "
+    "LEFT JOIN classes cl ON c.class_id = cl.id ";
 
-// 筛选条件(占位符不重复使用，编号连续)：? keyword, ?/? 模糊串, ?/? 学期, ?/? 教师
+// 筛选条件(占位符不重复使用，编号连续)：? keyword, ?/? 模糊串, ?/? 学期, ?/? 教师,
+//                                ?/? 班级
 const char *kWhereClause =
     "WHERE c.is_deleted = 0 "
     "AND (? = '' OR c.course_name LIKE ? OR IFNULL(t.name, '') LIKE ?) "
     "AND (? = '' OR IFNULL(c.semester, '') = ?) "
-    "AND (? = 0 OR c.teacher_id = ?) ";
+    "AND (? = 0 OR c.teacher_id = ?) "
+    "AND (? = 0 OR c.class_id = ?) ";
 
 model::Course rowToCourse(const drogon::orm::Row &row)
 {
@@ -34,6 +38,8 @@ model::Course rowToCourse(const drogon::orm::Row &row)
     c.credit = row["credit"].isNull() ? 0.0 : row["credit"].as<double>();
     c.teacherId = row["teacher_id"].isNull() ? 0 : row["teacher_id"].as<int64_t>();
     c.teacherName = row["teacher_name"].isNull() ? "" : row["teacher_name"].as<string>();
+    c.classId = row["class_id"].isNull() ? 0 : row["class_id"].as<int64_t>();
+    c.className = row["class_name"].isNull() ? "" : row["class_name"].as<string>();
     c.semester = row["semester"].isNull() ? "" : row["semester"].as<string>();
     c.courseTime = row["course_time"].isNull() ? "" : row["course_time"].as<string>();
     c.createTime = row["create_time"].isNull() ? "" : row["create_time"].as<string>();
@@ -43,7 +49,7 @@ model::Course rowToCourse(const drogon::orm::Row &row)
 } // namespace
 
 api::Result CourseService::list(const string &keyword, int page, int size,
-                                int64_t teacherId, const string &semester)
+                                int64_t teacherId, const string &semester, int64_t classId)
 {
     if (page < 1)
         page = 1;
@@ -60,13 +66,15 @@ api::Result CourseService::list(const string &keyword, int page, int size,
             string("SELECT COUNT(*) AS total FROM courses c "
                         "LEFT JOIN teachers t ON c.teacher_id = t.id ") +
                 kWhereClause,
-            keyword, pattern, pattern, semester, semester, teacherId, teacherId);
+            keyword, pattern, pattern, semester, semester, teacherId, teacherId,
+            classId, classId);
         const int64_t total = countRows[0]["total"].as<int64_t>();
 
         auto rows = client->execSqlSync(
             string(kSelectPrefix) + kWhereClause +
                 "ORDER BY c.id DESC LIMIT ? OFFSET ?",
-            keyword, pattern, pattern, semester, semester, teacherId, teacherId, size, offset);
+            keyword, pattern, pattern, semester, semester, teacherId, teacherId,
+            classId, classId, size, offset);
 
         // 用手写单链表承载结果集(头插)，再遍历序列化
         LinkedList<model::Course> courses;
@@ -124,25 +132,22 @@ api::Result CourseService::create(const model::Course &c)
                 return api::Result::error(api::E_PARAM, "指定的授课教师不存在");
         }
 
-        // teacher_id 为外键，未指定时必须写 NULL，故分两条语句
-        if (c.teacherId > 0)
+        if (c.classId > 0)
         {
-            client->execSqlSync(
-                "INSERT INTO courses (course_name, credit, teacher_id, semester, course_time) "
-                "VALUES (?, ?, ?, ?, ?)",
-                c.courseName, c.credit, c.teacherId, c.semester, c.courseTime);
-        }
-        else
-        {
-            client->execSqlSync(
-                "INSERT INTO courses (course_name, credit, semester, course_time) "
-                "VALUES (?, ?, ?, ?)",
-                c.courseName, c.credit, c.semester, c.courseTime);
+            auto cl = client->execSqlSync(
+                "SELECT id FROM classes WHERE id = ?", c.classId);
+            if (cl.size() == 0)
+                return api::Result::error(api::E_PARAM, "指定的开设班级不存在");
         }
 
-        auto idRows = client->execSqlSync("SELECT LAST_INSERT_ID() AS id");
+        // teacher_id / class_id 为外键，未指定时必须写 NULL
+        auto res = client->execSqlSync(
+            "INSERT INTO courses (course_name, credit, teacher_id, class_id, semester, course_time) "
+            "VALUES (?, ?, NULLIF(?, 0), NULLIF(?, 0), ?, ?)",
+            c.courseName, c.credit, c.teacherId, c.classId, c.semester, c.courseTime);
+
         Json::Value data(Json::objectValue);
-        data["id"] = static_cast<Json::Int64>(idRows[0]["id"].as<int64_t>());
+        data["id"] = static_cast<Json::Int64>(res.insertId());
         return api::Result::success(data, "新增课程成功");
     }
     catch (const exception &e)
@@ -174,19 +179,20 @@ api::Result CourseService::update(int64_t id, const model::Course &c)
                 "SELECT id FROM teachers WHERE id = ? AND is_deleted = 0", c.teacherId);
             if (t.size() == 0)
                 return api::Result::error(api::E_PARAM, "指定的授课教师不存在");
+        }
 
-            client->execSqlSync(
-                "UPDATE courses SET course_name = ?, credit = ?, teacher_id = ?, "
-                "semester = ?, course_time = ? WHERE id = ?",
-                c.courseName, c.credit, c.teacherId, c.semester, c.courseTime, id);
-        }
-        else
+        if (c.classId > 0)
         {
-            client->execSqlSync(
-                "UPDATE courses SET course_name = ?, credit = ?, teacher_id = NULL, "
-                "semester = ?, course_time = ? WHERE id = ?",
-                c.courseName, c.credit, c.semester, c.courseTime, id);
+            auto cl = client->execSqlSync(
+                "SELECT id FROM classes WHERE id = ?", c.classId);
+            if (cl.size() == 0)
+                return api::Result::error(api::E_PARAM, "指定的开设班级不存在");
         }
+
+        client->execSqlSync(
+            "UPDATE courses SET course_name = ?, credit = ?, teacher_id = NULLIF(?, 0), "
+            "class_id = NULLIF(?, 0), semester = ?, course_time = ? WHERE id = ?",
+            c.courseName, c.credit, c.teacherId, c.classId, c.semester, c.courseTime, id);
 
         return api::Result::success(Json::Value(Json::objectValue), "修改课程成功");
     }

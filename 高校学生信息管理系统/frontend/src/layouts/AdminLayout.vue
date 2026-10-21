@@ -90,19 +90,36 @@ main {
 nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 24px;
-  padding: 16px 24px;
+  gap: 0;
+  padding: 0;
   background: #ecf5ff;
+  border-top: 1px solid #a0cfff;
+  border-bottom: 1px solid #a0cfff;
 }
 
 nav a {
+  flex: 1 1 0;
+  min-width: 96px;
+  padding: 14px 8px;
+  border-right: 1px solid #a0cfff;
   color: #303133;
+  text-align: center;
   text-decoration: none;
 }
 
+nav a:last-child {
+  border-right: none;
+}
+
+nav a:hover {
+  background: #d9ecff;
+}
+
 nav a.router-link-exact-active {
+  background: #ffffff;
   color: #409eff;
   font-weight: bold;
+  box-shadow: inset 0 -2px 0 #409eff;
 }
 header button {
   padding: 8px 16px;

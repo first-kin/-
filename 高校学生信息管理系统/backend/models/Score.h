@@ -20,6 +20,7 @@ struct Score
     string studentName;
     int64_t courseId = 0;
     string courseName;
+    double credit = 0.0;  // 课程学分（联表展示字段）
     bool hasScore = false;
     double score = 0.0;
     int status = 0;  // 0 正常 / 1 缺考 / 2 缓考
@@ -126,6 +127,7 @@ inline Json::Value scoreToJson(const Score &s)
     j["studentName"] = s.studentName;
     j["courseId"] = static_cast<Json::Int64>(s.courseId);
     j["courseName"] = s.courseName;
+    j["credit"] = s.credit;
     j["score"] = s.hasScore ? Json::Value(s.score) : Json::Value(Json::nullValue);
     j["status"] = s.status;
     j["examTime"] = s.examTime;

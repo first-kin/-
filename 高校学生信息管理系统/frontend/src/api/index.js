@@ -28,16 +28,28 @@ const clone = (value) => JSON.parse(JSON.stringify(value))
 const wait = (data) => Promise.resolve(clone(data))
 const listFrom = (data) => Array.isArray(data) ? data : (data?.list || [])
 
+// 当前学期（与页面顶部的学年学期标签一致）
+const CURRENT_TERM = '2026-2027-1'
+
+// 后端课程表没有状态字段，按学期推算：当前学期=开课中，早于当前=已结课，晚于当前=未开课
+function courseStatus(term, rawStatus) {
+  if (rawStatus && rawStatus !== '未知') return rawStatus
+  if (!term) return '未排课'
+  if (term === CURRENT_TERM) return '开课中'
+  return term < CURRENT_TERM ? '已结课' : '未开课'
+}
+
 function normalizeCourse(item) {
+  const term = item.term || item.semester || ''
   return {
     ...item,
     code: item.code || item.courseCode || '',
     name: item.name || item.courseName || '',
     teacher: item.teacher || item.teacherName || '',
-    term: item.term || item.semester || '',
+    term,
     time: item.time || item.courseTime || '',
     room: item.room || '',
-    status: item.status || '未知',
+    status: courseStatus(term, item.status),
   }
 }
 

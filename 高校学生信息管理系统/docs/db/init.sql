@@ -98,6 +98,7 @@ CREATE TABLE courses (
   course_name VARCHAR(100) NOT NULL,
   credit      DECIMAL(3,1) NOT NULL COMMENT '学分0.5~10',
   teacher_id  BIGINT UNSIGNED NULL COMMENT '授课教师',
+  class_id    BIGINT UNSIGNED NULL COMMENT '开设班级，该班学生可见此课程',
   semester    VARCHAR(20)  NULL COMMENT '如2025-2026-1',
   course_time VARCHAR(100) NULL COMMENT '上课时间地点描述',
   create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -105,7 +106,9 @@ CREATE TABLE courses (
   is_deleted  TINYINT      NOT NULL DEFAULT 0,
   UNIQUE KEY uk_course_name (course_name),
   KEY idx_course_teacher (teacher_id),
-  CONSTRAINT fk_course_teacher FOREIGN KEY (teacher_id) REFERENCES teachers(id)
+  KEY idx_course_class (class_id),
+  CONSTRAINT fk_course_teacher FOREIGN KEY (teacher_id) REFERENCES teachers(id),
+  CONSTRAINT fk_course_class FOREIGN KEY (class_id) REFERENCES classes(id)
 ) ENGINE=InnoDB COMMENT='课程表';
 
 -- 8. 成绩表（学生-课程的M:N联系,依赖 students、courses）

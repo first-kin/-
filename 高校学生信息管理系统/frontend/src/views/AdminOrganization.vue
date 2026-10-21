@@ -36,7 +36,10 @@
           </div>
           <el-table v-loading="classLoading" :data="classes" stripe row-key="id" empty-text="暂无班级">
             <el-table-column prop="className" label="班级名称" min-width="160" />
-            <el-table-column label="专业 ID" min-width="140">
+            <el-table-column label="所属学院" min-width="160">
+              <template #default="{ row }">{{ row.deptName || '未设置' }}</template>
+            </el-table-column>
+            <el-table-column label="专业" min-width="140">
               <template #default="{ row }">{{ row.majorName || `专业 #${row.majorId}` }}</template>
             </el-table-column>
             <el-table-column prop="grade" label="入学年级" width="120" />

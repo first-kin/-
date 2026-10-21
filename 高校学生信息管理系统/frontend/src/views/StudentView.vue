@@ -9,7 +9,7 @@
     <div class="sidebar-bottom"><div class="help-icon">?</div><span v-if="!collapsed">需要帮助？</span></div>
   </aside>
   <main class="main-area">
-    <header class="topbar"><div class="breadcrumb">工作台 <span>/</span> {{currentTitle}}</div><div class="top-actions"><span class="term-tag">2026-2027 学年 · 第一学期</span><button class="icon-button" title="通知">♧<i></i></button><div class="user-mini"><div class="avatar">夏</div><div><b>夏同学</b><small>学生账户</small></div><span>⌄</span></div><button class="logout-button" type="button" @click="handleLogout">退出登录</button></div></header>
+    <header class="topbar"><div class="breadcrumb">工作台 <span>/</span> {{currentTitle}}</div><div class="top-actions"><span class="term-tag">2026-2027 学年 · 第一学期</span><button class="icon-button" title="通知">♧<i></i></button><div class="user-mini"><div class="avatar">{{ (auth.name || '同学').slice(0, 1) }}</div><div><b>{{ auth.name || '同学' }}</b><small>学生账户</small></div><span>⌄</span></div><button class="logout-button" type="button" @click="handleLogout">退出登录</button></div></header>
     <section class="page-content">
       <template v-if="active==='courses'">
         <div class="page-heading"><div><div class="eyebrow">ACADEMIC SERVICES</div><h1>课程管理</h1><p>查看当前学期课程安排，快速掌握课程信息与上课地点。</p></div><el-button type="primary" plain @click="exportCourses">导出课程表 ↗</el-button></div>
@@ -18,6 +18,29 @@
           <div class="stat-card"><div class="stat-label">累计学分 <span class="stat-symbol violet">✧</span></div><div class="stat-value">{{courseCredits}}<small> 分</small></div><div class="stat-foot">按当前列表课程计算</div></div>
           <div class="stat-card"><div class="stat-label">授课教师 <span class="stat-symbol green">♙</span></div><div class="stat-value">{{teacherCount}}<small> 位</small></div><div class="stat-foot">不同教师人数</div></div>
           <div class="stat-card"><div class="stat-label">正在开课 <span class="stat-symbol orange">◷</span></div><div class="stat-value">{{courseList.filter(c=>c.status==='开课中').length}}<small> 门</small></div><div class="stat-foot">课程状态实时展示</div></div>
+        </div>
+        <div class="content-card timetable-card">
+          <div class="card-heading"><div><h2>本周课表</h2><p>根据课程的上课时间自动生成 · 已排课 {{scheduledCount}} 门</p></div><span class="muted">周一至周日</span></div>
+          <div class="tt-wrap">
+            <table class="tt-table">
+              <thead><tr><th class="tt-corner">节次</th><th v-for="(d, di) in weekDays" :key="d">{{d}}</th></tr></thead>
+              <tbody>
+                <tr v-for="p in schedule.periodCount" :key="p">
+                  <th class="tt-period">{{p}}</th>
+                  <template v-for="(d, di) in weekDays" :key="d">
+                    <td v-if="!isCovered(di, p)" :rowspan="blockSpan(di, p)" :class="blockOf(di, p) ? 'tt-filled' : 'tt-empty'">
+                      <div v-if="blockOf(di, p)" class="tt-course" :style="{minHeight: blockSpan(di, p) * 46 - 6 + 'px'}">
+                        <b>{{blockOf(di, p).course.name}}</b>
+                        <small>{{blockOf(di, p).course.teacher || '未指定教师'}}</small>
+                        <small v-if="blockOf(di, p).course.room">{{blockOf(di, p).course.room}}</small>
+                      </div>
+                    </td>
+                  </template>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-if="schedule.unparsed.length" class="tt-hint">未识别上课时间：{{schedule.unparsed.map(c=>c.name).join('、')}}（可在课程编辑中按“周一 1-2 节”格式填写）</div>
         </div>
         <div class="content-card">
           <div class="card-heading"><div><h2>课程列表</h2><p>共 {{filteredCourses.length}} 门课程 · 支持课程名称、编号及教师检索</p></div><el-button type="primary" @click="openCourse()">＋ 新增课程</el-button></div>
@@ -52,7 +75,7 @@
       </template>
       <template v-else>
         <div class="page-heading"><div><div class="eyebrow">PERSONAL WORKSPACE</div><h1>个人中心</h1><p>管理你的个人资料与账户安全设置。</p></div><el-button type="primary" @click="saveProfile" :loading="saving">保存修改</el-button></div>
-        <div class="profile-layout"><div class="profile-card"><div class="profile-cover"></div><div class="profile-main"><div class="profile-avatar">夏</div><h2>{{profile.name||'同学'}}</h2><p>{{profile.major}} · {{profile.className}}</p><el-tag type="success" effect="light" round>在校学生</el-tag><div class="profile-divider"></div><div class="profile-meta"><span>学号</span><b>{{profile.studentNo}}</b></div><div class="profile-meta"><span>所属学院</span><b>{{profile.department}}</b></div><div class="profile-meta"><span>入学年级</span><b>{{profile.grade}}</b></div><div class="profile-tip">保持资料准确，有助于教务信息及时送达。</div></div></div>
+        <div class="profile-layout"><div class="profile-card"><div class="profile-cover"></div><div class="profile-main"><div class="profile-avatar">{{ (profile.name || auth.name || '同').slice(0, 1) }}</div><h2>{{profile.name||'同学'}}</h2><p>{{profile.major}} · {{profile.className}}</p><el-tag type="success" effect="light" round>在校学生</el-tag><div class="profile-divider"></div><div class="profile-meta"><span>学号</span><b>{{profile.studentNo}}</b></div><div class="profile-meta"><span>所属学院</span><b>{{profile.department}}</b></div><div class="profile-meta"><span>入学年级</span><b>{{profile.grade}}</b></div><div class="profile-tip">保持资料准确，有助于教务信息及时送达。</div></div></div>
         <div class="profile-right"><div class="content-card form-card"><div class="card-heading"><div><h2>基本资料</h2><p>请确保联系方式真实有效</p></div><span class="muted">个人信息</span></div><el-form :model="profile" label-position="top" class="profile-form"><div class="form-grid"><el-form-item label="姓名"><el-input v-model="profile.name" placeholder="请输入姓名"/></el-form-item><el-form-item label="学号"><el-input v-model="profile.studentNo" disabled/></el-form-item><el-form-item label="性别"><el-select v-model="profile.gender" style="width:100%"><el-option label="男" value="男"/><el-option label="女" value="女"/></el-select></el-form-item><el-form-item label="联系电话"><el-input v-model="profile.phone" placeholder="请输入联系电话"/></el-form-item><el-form-item label="电子邮箱"><el-input v-model="profile.email" placeholder="请输入电子邮箱"/></el-form-item><el-form-item label="所在学院"><el-input v-model="profile.department" disabled/></el-form-item><el-form-item label="专业"><el-input v-model="profile.major" disabled/></el-form-item><el-form-item label="行政班级"><el-input v-model="profile.className" disabled/></el-form-item></div></el-form></div>
         <div class="content-card security-card"><div class="card-heading"><div><h2>账户安全</h2><p>定期更新密码，保护账户安全</p></div><div class="security-shield">⌑</div></div><el-form :model="passwordForm" label-position="top" class="password-form"><el-form-item label="当前密码"><el-input v-model="passwordForm.oldPassword" type="password" show-password placeholder="请输入当前密码"/></el-form-item><div class="form-grid"><el-form-item label="新密码"><el-input v-model="passwordForm.newPassword" type="password" show-password placeholder="至少 6 位"/></el-form-item><el-form-item label="确认新密码"><el-input v-model="passwordForm.confirmPassword" type="password" show-password placeholder="再次输入新密码"/></el-form-item></div><el-button @click="changePassword" :loading="changing">更新密码</el-button><span class="muted password-hint">演示模式下原密码为 123456</span></el-form></div></div></div>
       </template>
@@ -90,6 +113,51 @@ const filteredScores=computed(()=>scoreList.value.filter(s=>(!scoreKeyword.value
 const averageScore=computed(()=>scoreList.value.length?(scoreList.value.reduce((s,r)=>s+r.total,0)/scoreList.value.length).toFixed(1):'—')
 const earnedCredits=computed(()=>scoreList.value.filter(s=>s.total>=60).reduce((s,r)=>s+r.credit,0).toFixed(1).replace(/\.0$/,''))
 const highestScore=computed(()=>scoreList.value.length?Math.max(...scoreList.value.map(s=>s.total)):'—')
+// ---------- 课表：按“周一 1-2 节”格式解析上课时间 ----------
+const weekDays=['周一','周二','周三','周四','周五','周六','周日']
+const weekIndex={一:0,二:1,三:2,四:3,五:4,六:5,日:6,天:6,'1':0,'2':1,'3':2,'4':3,'5':4,'6':5,'7':6}
+// 返回 [{day:0~6, period:1~N}]
+function parseCourseTime(text){
+  if(!text) return []
+  const slots=[]
+  String(text).split(/[,，、;；\/]/).forEach(seg=>{
+    const wm=seg.match(/(?:周|星期|礼拜)\s*([一二三四五六日天1-7])/)
+    if(!wm) return
+    const day=weekIndex[wm[1]]
+    const range=seg.match(/(\d+)\s*[-~～至]\s*(\d+)/)
+    const single=seg.match(/第?\s*(\d+)\s*节/)
+    let start=0,end=0
+    if(range){start=Number(range[1]);end=Number(range[2])}
+    else if(single){start=end=Number(single[1])}
+    if(!start||!end||end<start) return
+    for(let p=start;p<=end;p++) slots.push({day,period:p})
+  })
+  return slots
+}
+const schedule=computed(()=>{
+  const blocks={}          // `${day}-${startPeriod}` -> {course, span}
+  const covered=new Set()  // 被上一个节次 rowspan 覆盖的格子
+  const unparsed=[]
+  let maxEnd=0
+  courseList.value.forEach(c=>{
+    const slots=parseCourseTime(c.time)
+    if(!slots.length){unparsed.push(c);return}
+    const byDay={}
+    slots.forEach(({day,period})=>{(byDay[day]=byDay[day]||[]).push(period)})
+    Object.keys(byDay).forEach(dayKey=>{
+      const periods=byDay[dayKey].sort((a,b)=>a-b)
+      const start=periods[0],end=periods[periods.length-1]
+      blocks[`${dayKey}-${start}`]={course:c,span:end-start+1}
+      for(let p=start+1;p<=end;p++) covered.add(`${dayKey}-${p}`)
+      maxEnd=Math.max(maxEnd,end)
+    })
+  })
+  return {blocks,covered,unparsed,periodCount:Math.max(10,maxEnd)}
+})
+const blockOf=(day,period)=>schedule.value.blocks[`${day}-${period}`]
+const blockSpan=(day,period)=>blockOf(day,period)?.span||1
+const isCovered=(day,period)=>schedule.value.covered.has(`${day}-${period}`)
+const scheduledCount=computed(()=>new Set(Object.values(schedule.value.blocks).map(b=>b.course.id)).size)
 const courseDialog=ref(false),editing=ref(false),courseFormRef=ref()
 const blankCourse=()=>({code:'',name:'',teacher:'',credit:2,term:'2026-2027-1',time:'',room:''})
 const courseForm=reactive(blankCourse())
@@ -125,5 +193,74 @@ onMounted(load)
   border-color: #596ce8;
   background: #f7f8ff;
   color: #596ce8;
+}
+
+/* ---------- 课表 ---------- */
+.timetable-card {
+  margin-bottom: 16px;
+}
+.tt-wrap {
+  overflow-x: auto;
+}
+.tt-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.tt-table th,
+.tt-table td {
+  border: 1px solid #eaedf6;
+  padding: 0;
+}
+.tt-table thead th {
+  height: 38px;
+  background: #f7f8fd;
+  color: #667188;
+  font-size: 12px;
+  font-weight: 600;
+}
+.tt-corner {
+  width: 52px;
+}
+.tt-period {
+  width: 52px;
+  background: #fafbff;
+  color: #9aa3b8;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+.tt-empty {
+  height: 46px;
+  background: #fff;
+}
+.tt-filled {
+  background: #fff;
+  vertical-align: top;
+}
+.tt-course {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-sizing: border-box;
+  margin: 3px;
+  padding: 6px 8px;
+  border-left: 3px solid #596ce8;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #eef1ff, #f8f9ff);
+}
+.tt-course b {
+  color: #2b3350;
+  font-size: 12.5px;
+}
+.tt-course small {
+  color: #7a8494;
+  font-size: 11px;
+}
+.tt-hint {
+  margin-top: 10px;
+  color: #9aa3b8;
+  font-size: 12px;
 }
 </style>
