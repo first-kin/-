@@ -7,6 +7,7 @@
 
 #include "models/Score.h"
 #include "services/ScoreService.h"
+#include "utils/Db.h"
 #include "utils/Response.h"
 using namespace std;
 
@@ -89,7 +90,14 @@ public:
         const int page = toInt(req->getParameter("page"), 1);
         const int size = toInt(req->getParameter("size"), 10);
 
-        const int64_t teacherScope = (role == "teacher") ? uid : 0;
+        // 教师只看自己任教课程的成绩：uid 是 users.id，需先查 teachers.id
+        int64_t teacherScope = 0;
+        if (role == "teacher")
+        {
+            auto rows = api::db()->execSqlSync(
+                "SELECT id FROM teachers WHERE user_id = ? AND is_deleted = 0 LIMIT 1", uid);
+            teacherScope = rows.empty() ? -1 : rows[0]["id"].as<int64_t>();
+        }
         callback(api::toResponse(
             svc::ScoreService::list(courseId, studentId, keyword, page, size, teacherScope)));
     }

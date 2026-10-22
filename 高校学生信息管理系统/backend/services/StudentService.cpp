@@ -145,7 +145,7 @@ const char *kStudentSelect =
 const char *kStudentWhere =
     "WHERE s.is_deleted = 0 "
     "AND (? = 0 OR s.class_id IN "
-    "     (SELECT cl.id FROM classes cl WHERE cl.head_teacher_id = ?)) "
+    "     (SELECT DISTINCT class_id FROM courses WHERE teacher_id = ? AND is_deleted = 0)) "
     "AND (? = '' OR s.student_no LIKE ? ESCAPE '!' "
     "          OR s.name LIKE ? ESCAPE '!' "
     "          OR c.class_name LIKE ? ESCAPE '!') "
@@ -228,7 +228,7 @@ api::Result StudentService::detail(int64_t id, int64_t selfTeacherUserId)
             string(kStudentSelect) +
                 "WHERE s.id = ? AND s.is_deleted = 0 "
                 "AND (? = 0 OR s.class_id IN "
-                "     (SELECT cl.id FROM classes cl WHERE cl.head_teacher_id = ?)) "
+                "     (SELECT DISTINCT class_id FROM courses WHERE teacher_id = ? AND is_deleted = 0)) "
                 "LIMIT 1",
             id, teacherId, teacherId);
 

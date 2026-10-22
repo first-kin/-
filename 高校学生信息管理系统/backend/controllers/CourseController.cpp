@@ -81,9 +81,14 @@ public:
         const string semester = req->getParameter("semester");
 
         // CRS-04：教师只看本人课程；管理员可传 teacherId 过滤
+        // 注意：JWT 里的 uid 是 users.id，但 courses.teacher_id 存的是 teachers.id
         int64_t teacherFilter = 0;
         if (role == "teacher")
-            teacherFilter = uid;
+        {
+            auto rows = api::db()->execSqlSync(
+                "SELECT id FROM teachers WHERE user_id = ? AND is_deleted = 0 LIMIT 1", uid);
+            teacherFilter = rows.empty() ? -1 : rows[0]["id"].as<int64_t>();
+        }
         else
             teacherFilter = toInt64(req->getParameter("teacherId"), 0);
 

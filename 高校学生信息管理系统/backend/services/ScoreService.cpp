@@ -67,7 +67,7 @@ api::Result ScoreService::list(int64_t courseId, int64_t studentId, const string
         "WHERE s.is_deleted = 0 AND c.is_deleted = 0 "
         "AND (? = 0 OR sc.course_id = ?) "
         "AND (? = 0 OR sc.student_id = ?) "
-        "AND (? = '' OR s.name LIKE ? OR s.student_no LIKE ?) "
+        "AND (? = '' OR s.name LIKE ? OR s.student_no LIKE ? OR c.course_name LIKE ?) "
         "AND (? = 0 OR c.teacher_id = ?) ";
 
     try
@@ -79,13 +79,15 @@ api::Result ScoreService::list(int64_t courseId, int64_t studentId, const string
                         "JOIN students s ON sc.student_id = s.id "
                         "JOIN courses c ON sc.course_id = c.id ") +
                 kWhere,
-            courseId, courseId, studentId, studentId, keyword, pattern, pattern,
+            courseId, courseId, studentId, studentId,
+            keyword, pattern, pattern, pattern,
             teacherScope, teacherScope);
         const int64_t total = countRows[0]["total"].as<int64_t>();
 
         auto rows = client->execSqlSync(
             string(kScoreSelect) + kWhere + "ORDER BY sc.id DESC LIMIT ? OFFSET ?",
-            courseId, courseId, studentId, studentId, keyword, pattern, pattern,
+            courseId, courseId, studentId, studentId,
+            keyword, pattern, pattern, pattern,
             teacherScope, teacherScope, size, offset);
 
         Json::Value arr(Json::arrayValue);

@@ -101,19 +101,20 @@ if errorlevel 1 (
     exit /b 1
 )
 if exist "%ROOT%frontend\node_modules" (
-    start "frontend-5173" /d "%ROOT%frontend" cmd /k "npm run dev"
+    start "" /d "%ROOT%frontend" cmd /k "npm run dev"
 ) else (
     echo       First run: npm install, takes a few minutes, do not close.
-    start "frontend-install" /d "%ROOT%frontend" cmd /k "npm install && npm run dev"
+    start "" /d "%ROOT%frontend" cmd /k "npm install && npm run dev"
 )
 
 set /a WAIT=0
 :WAIT_FRONTEND
+if %WAIT% equ 0 echo       waiting for Vite to be ready...
 timeout /t 1 /nobreak >nul
 netstat -ano | findstr ":5173" | findstr LISTENING >nul
 if %errorlevel% equ 0 goto FRONTEND_UP
 set /a WAIT+=1
-if %WAIT% lss 60 goto WAIT_FRONTEND
+if %WAIT% lss 30 goto WAIT_FRONTEND
 echo       [WARN] Port 5173 is not listening yet, open it manually later.
 goto OPEN_BROWSER
 
@@ -123,13 +124,19 @@ echo       frontend is listening on 5173.
 :OPEN_BROWSER
 :: ---- [6/6] browser ----
 echo [6/6] Opening browser ...
-start "" http://localhost:5173
+if exist "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" (
+    start "" "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" "http://localhost:5173"
+) else if exist "C:\Program Files\Microsoft\Edge\Application\msedge.exe" (
+    start "" "C:\Program Files\Microsoft\Edge\Application\msedge.exe" "http://localhost:5173"
+) else (
+    start "" http://localhost:5173
+)
 
 echo.
 echo ================================================
 echo   ALL STARTED.
-echo.
-echo   Login:  admin  /  password
+echo   Browser should be at http://localhost:5173
+echo   Login page is ready.
 echo.
 echo   To stop: close "backend-8080" and
 echo            "frontend-5173" windows.
