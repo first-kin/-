@@ -21,6 +21,8 @@ class DeptService
 public:
     // 院系列表（登录用户可查，非分页）
     static api::Result deptList();
+    // 专业列表（用于班级选择所属专业，非分页）
+    static api::Result majorList();
     // 新增/编辑/删除院系（admin）
     static api::Result deptCreate(const Json::Value &body);
     static api::Result deptUpdate(int64_t id, const Json::Value &body);

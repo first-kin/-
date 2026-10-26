@@ -35,10 +35,16 @@ public:
                 "       COALESCE(t.phone, s.phone) AS phone, "
                 "       COALESCE(t.email, s.email) AS email, "
                 "       t.teacher_no AS teacher_no, s.student_no AS student_no, "
+                "       COALESCE(t.gender, s.gender) AS gender, "
+                "       cl.class_name AS class_name, mj.major_name AS major_name, "
+                "       dp.dept_name AS dept_name, cl.grade AS grade, "
                 "       DATE_FORMAT(u.last_login_time, '%Y-%m-%d %H:%i:%s') AS last_login_time "
                 "FROM users u "
                 "LEFT JOIN teachers t ON t.user_id = u.id AND t.is_deleted = 0 "
                 "LEFT JOIN students s ON s.user_id = u.id AND s.is_deleted = 0 "
+                "LEFT JOIN classes cl ON s.class_id = cl.id "
+                "LEFT JOIN majors mj ON cl.major_id = mj.id "
+                "LEFT JOIN departments dp ON mj.dept_id = dp.id "
                 "WHERE u.id = ? AND u.is_deleted = 0",
                 uid);
             if (rows.empty())
@@ -60,6 +66,16 @@ public:
                 d["teacherNo"] = r["teacher_no"].as<string>();
             if (!r["student_no"].isNull())
                 d["studentNo"] = r["student_no"].as<string>();
+            if (!r["gender"].isNull())
+                d["gender"] = r["gender"].as<string>();
+            if (!r["class_name"].isNull())
+                d["className"] = r["class_name"].as<string>();
+            if (!r["major_name"].isNull())
+                d["major"] = r["major_name"].as<string>();
+            if (!r["dept_name"].isNull())
+                d["department"] = r["dept_name"].as<string>();
+            if (!r["grade"].isNull())
+                d["grade"] = to_string(r["grade"].as<int>()) + "级";
             if (!r["last_login_time"].isNull())
                 d["lastLoginTime"] = r["last_login_time"].as<string>();
             callback(api::toResponse(api::Result::success(d)));
@@ -93,19 +109,28 @@ public:
                                  ? (*body)["phone"].asString() : "";
         const string email = body->isMember("email") && (*body)["email"].isString()
                                  ? (*body)["email"].asString() : "";
+        const string gender = body->isMember("gender") && (*body)["gender"].isString()
+                                  ? (*body)["gender"].asString() : "";
+        if (!gender.empty() && gender != "男" && gender != "女")
+        {
+            callback(api::toResponse(api::Result::error(api::E_PARAM, "性别只能是男或女")));
+            return;
+        }
 
         try
         {
             if (role == "teacher")
                 api::db()->execSqlSync(
-                    "UPDATE teachers SET phone = NULLIF(?,''), email = NULLIF(?,'') "
+                    "UPDATE teachers SET phone = NULLIF(?,''), email = NULLIF(?,''), "
+                    "       gender = COALESCE(NULLIF(?,''), gender) "
                     "WHERE user_id = ? AND is_deleted = 0",
-                    phone, email, api::currentUid(req));
+                    phone, email, gender, api::currentUid(req));
             else
                 api::db()->execSqlSync(
-                    "UPDATE students SET phone = NULLIF(?,''), email = NULLIF(?,'') "
+                    "UPDATE students SET phone = NULLIF(?,''), email = NULLIF(?,''), "
+                    "       gender = COALESCE(NULLIF(?,''), gender) "
                     "WHERE user_id = ? AND is_deleted = 0",
-                    phone, email, api::currentUid(req));
+                    phone, email, gender, api::currentUid(req));
             callback(api::toResponse(api::Result::success(Json::Value(Json::nullValue), "资料更新成功")));
         }
         catch (const exception &e)

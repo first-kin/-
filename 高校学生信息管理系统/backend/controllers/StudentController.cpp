@@ -4,6 +4,7 @@
 #include <drogon/MultiPart.h>
 
 #include <string>
+#include <vector>
 
 #include "services/StudentService.h"
 #include "utils/HttpUtil.h"
@@ -23,6 +24,8 @@ public:
     METHOD_LIST_BEGIN
     ADD_METHOD_TO(StudentController::list, "/api/students", Get, "JwtFilter");
     ADD_METHOD_TO(StudentController::detail, "/api/students/{id}", Get, "JwtFilter");
+    ADD_METHOD_TO(StudentController::courseIds, "/api/students/{id}/courses", Get, "JwtFilter");
+    ADD_METHOD_TO(StudentController::setCourseIds, "/api/students/{id}/courses", Put, "JwtFilter");
     ADD_METHOD_TO(StudentController::create, "/api/students", Post, "JwtFilter");
     ADD_METHOD_TO(StudentController::update, "/api/students/{id}", Put, "JwtFilter");
     ADD_METHOD_TO(StudentController::remove, "/api/students/{id}", Delete, "JwtFilter");
@@ -79,6 +82,47 @@ public:
         const int64_t selfTeacherUserId = util::isAdmin(req) ? 0 : api::currentUid(req);
         auto result = svc::StudentService::detail(id, selfTeacherUserId);
         callback(api::toResponse(result));
+    }
+
+    // GET /api/students/{id}/courses —— admin 读取学生选课
+    void courseIds(const HttpRequestPtr &req,
+                   function<void(const HttpResponsePtr &)> &&callback, int64_t id)
+    {
+        if (!util::isAdmin(req))
+        {
+            callback(api::toResponse(util::fail(util::kNoPerm, "仅管理员可管理学生选课")));
+            return;
+        }
+        callback(api::toResponse(svc::StudentService::courseIds(id)));
+    }
+
+    // PUT /api/students/{id}/courses { "courseIds": [1, 2] }
+    void setCourseIds(const HttpRequestPtr &req,
+                      function<void(const HttpResponsePtr &)> &&callback, int64_t id)
+    {
+        if (!util::isAdmin(req))
+        {
+            callback(api::toResponse(util::fail(util::kNoPerm, "仅管理员可管理学生选课")));
+            return;
+        }
+        const auto body = req->getJsonObject();
+        if (!body || !body->isObject() || !(*body).isMember("courseIds") ||
+            !(*body)["courseIds"].isArray())
+        {
+            callback(api::toResponse(util::fail(util::kParam, "courseIds 必须为数组")));
+            return;
+        }
+        vector<int64_t> courseIds;
+        for (const auto &item : (*body)["courseIds"])
+        {
+            if (!item.isIntegral())
+            {
+                callback(api::toResponse(util::fail(util::kParam, "courseIds 必须全部为整数")));
+                return;
+            }
+            courseIds.push_back(item.asInt64());
+        }
+        callback(api::toResponse(svc::StudentService::setCourseIds(id, courseIds)));
     }
 
     // POST /api/students —— 仅 admin

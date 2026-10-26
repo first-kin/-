@@ -1,14 +1,9 @@
 import request from './request.js'
 import { useAuthStore } from '../stores/auth.js'
+import { academicApi } from './academic.js'
+import { managementApi } from './management.js'
 
 const mock = import.meta.env?.VITE_USE_MOCK !== 'false'
-
-let courses = [
-  { id: 1, code: 'SE201', name: '数据结构', teacher: '王老师', credit: 4, term: '2026-2027-1', time: '周一 1-2 节', room: '教 2-301', status: '开课中' },
-  { id: 2, code: 'SE202', name: '面向对象程序设计', teacher: '李老师', credit: 3.5, term: '2026-2027-1', time: '周二 3-4 节', room: '实验楼 A204', status: '开课中' },
-  { id: 3, code: 'MA103', name: '高等数学（上）', teacher: '陈老师', credit: 5, term: '2026-2027-1', time: '周三 1-2 节', room: '教 1-105', status: '开课中' },
-  { id: 4, code: 'EN101', name: '大学英语', teacher: '赵老师', credit: 2, term: '2026-2027-1', time: '周五 5-6 节', room: '教 3-210', status: '已结课' },
-]
 
 let scores = [
   { id: 1, courseCode: 'SE201', courseName: '数据结构', teacher: '王老师', term: '2026-2027-1', usual: 92, exam: 88, total: 90, credit: 4, status: '已发布' },
@@ -31,8 +26,9 @@ const listFrom = (data) => Array.isArray(data) ? data : (data?.list || [])
 // 当前学期（与页面顶部的学年学期标签一致）
 const CURRENT_TERM = '2026-2027-1'
 
-// 后端课程表没有状态字段，按学期推算：当前学期=开课中，早于当前=已结课，晚于当前=未开课
+// 后端返回数字状态(0未开课/1开课中/2已结课)时直接映射；否则按学期推算
 function courseStatus(term, rawStatus) {
+  if (typeof rawStatus === 'number') return ({ 0: '未开课', 1: '开课中', 2: '已结课' }[rawStatus] || '开课中')
   if (rawStatus && rawStatus !== '未知') return rawStatus
   if (!term) return '未排课'
   if (term === CURRENT_TERM) return '开课中'
@@ -87,9 +83,14 @@ function coursePayload(data) {
 export const api = {
   courses: async (params = {}) => {
     if (mock) {
-      return wait(courses
+      const students = await managementApi.students({ keyword: profile.studentNo, page: 1, size: 100 })
+      const student = students.list.find((item) => item.studentNo === profile.studentNo)
+      if (!student) return []
+      const selectedIds = await managementApi.studentCourses(student.id)
+      const available = await academicApi.courses({ page: 1, size: 100 })
+      return wait((available.list || []).filter((course) => selectedIds.includes(Number(course.id)))
         .filter((course) => !params.keyword ||
-          `${course.name}${course.code}${course.teacher}`.toLowerCase().includes(params.keyword.toLowerCase()))
+          `${course.courseName}${course.teacherName}`.toLowerCase().includes(params.keyword.toLowerCase()))
         .map(normalizeCourse))
     }
     const result = await request.get('/courses', { params })
@@ -98,21 +99,17 @@ export const api = {
 
   addCourse: async (data) => {
     if (!mock) return request.post('/courses', coursePayload(data))
-    const item = { ...data, id: Date.now(), status: '开课中' }
-    courses.unshift(item)
-    return clone(normalizeCourse(item))
+    return normalizeCourse(await academicApi.createCourse(coursePayload(data)))
   },
 
   updateCourse: async (data) => {
     if (!mock) return request.put(`/courses/${data.id}`, coursePayload(data))
-    courses = courses.map((course) => course.id === data.id ? { ...course, ...data } : course)
-    return clone(data)
+    return normalizeCourse(await academicApi.updateCourse(data.id, coursePayload(data)))
   },
 
   deleteCourse: async (id) => {
     if (!mock) return request.delete(`/courses/${id}`)
-    courses = courses.filter((course) => course.id !== id)
-    return true
+    return academicApi.deleteCourse(id)
   },
 
   scores: async (params = {}) => {
@@ -140,7 +137,7 @@ export const api = {
     await request.put('/users/me', {
       phone: data.phone,
       email: data.email,
-      address: data.address,
+      gender: data.gender,
     })
     return { ...data }
   },

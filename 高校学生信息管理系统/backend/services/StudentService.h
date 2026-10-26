@@ -1,12 +1,14 @@
 #pragma once
 #include <cstdint>
 #include <string>
+#include <vector>
 
 #include <json/json.h>
 
 #include "utils/Result.h"
 
 using std::string;
+using std::vector;
 
 namespace svc
 {
@@ -26,6 +28,10 @@ public:
 
     // 学生详情
     static api::Result detail(int64_t id, int64_t selfTeacherUserId);
+
+    // 管理员读取或替换学生的选修课程集合
+    static api::Result courseIds(int64_t studentId);
+    static api::Result setCourseIds(int64_t studentId, const vector<int64_t> &courseIds);
 
     // 新增学生：事务内同步创建登录账号(users) + 学生档案(students)，
     // 用户名=学号，初始密码=学号后 6 位（BCrypt 散列）

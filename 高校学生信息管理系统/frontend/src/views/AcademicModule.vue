@@ -16,10 +16,10 @@ const teachers = ref([]), students = ref([]), classes = ref([])
 const statistics = ref(null)
 const profile = reactive({ name: '', username: '', role: '', phone: '', email: '', address: '' })
 const courseQuery = reactive({ keyword: '', semester: '', page: 1, size: 10 })
-const scoreQuery = reactive({ keyword: '', courseId: '', page: 1, size: 10 })
-const courseDialog = ref(false), scoreDialog = ref(false), editingId = ref(null)
-const courseForm = reactive({ courseName: '', credit: 2, teacherId: null, classId: null, semester: '2026-2027-1', courseTime: '' })
-const scoreForm = reactive({ courseId: null, studentId: null, score: null, status: 0, examTime: '' })
+const scoreQuery = reactive({ keyword: '', page: 1, size: 10 })
+const courseDialog = ref(false), scoreDialog = ref(false), editingId = ref(null), scoreEditingId = ref(null)
+const courseForm = reactive({ courseName: '', credit: 2, teacherId: null, classId: null, semester: '2026-2027-1', courseTime: '', room: '', status: 1 })
+const scoreForm = reactive({ courseId: null, studentId: null, usualScore: null, score: null, status: 0, examTime: '' })
 const passwordForm = reactive({ oldPassword: '', newPassword: '', confirmPassword: '' })
 const roleLabels = { admin: '管理员', teacher: '任课教师', student: '学生' }
 
@@ -31,7 +31,7 @@ async function loadCourses() {
 }
 async function loadScores() {
   busy.value = true
-  try { const result = await academicApi.scores({ ...scoreQuery, courseId: scoreQuery.courseId || undefined }); scores.value = result?.list || []; scoreTotal.value = result?.total || 0 }
+  try { const result = await academicApi.scores({ ...scoreQuery }); scores.value = result?.list || []; scoreTotal.value = result?.total || 0 }
   catch (error) { showError(error) } finally { busy.value = false }
 }
 async function loadProfile() {
@@ -41,7 +41,7 @@ function openCourse(row) {
   if (!teachers.value.length) managementApi.teachers({ page: 1, size: 100 }).then((result) => { teachers.value = result.list || [] }).catch(showError)
   if (!classes.value.length) managementApi.classes().then((result) => { classes.value = result || [] }).catch(showError)
   editingId.value = row?.id || null
-  Object.assign(courseForm, { courseName: row?.courseName || '', credit: Number(row?.credit) || 2, teacherId: row?.teacherId || null, classId: row?.classId || null, semester: row?.semester || '2026-2027-1', courseTime: row?.courseTime || '' })
+  Object.assign(courseForm, { courseName: row?.courseName || '', credit: Number(row?.credit) || 2, teacherId: row?.teacherId || null, classId: row?.classId || null, semester: row?.semester || '2026-2027-1', courseTime: row?.courseTime || '', room: row?.room || '', status: Number.isInteger(row?.status) ? row.status : 1 })
   courseDialog.value = true
 }
 async function saveCourse() {
@@ -63,8 +63,9 @@ async function removeCourse(row) {
     await loadCourses()
   } catch (error) { if (error !== 'cancel' && error !== 'close') showError(error) }
 }
-async function openScore() {
-  Object.assign(scoreForm, { courseId: null, studentId: null, score: null, status: 0, examTime: '' })
+async function openScore(row = null) {
+  scoreEditingId.value = row?.id || null
+  Object.assign(scoreForm, { courseId: row?.courseId ?? null, studentId: row?.studentId ?? null, usualScore: row?.usualScore ?? null, score: row?.score ?? null, status: Number(row?.status ?? 0), examTime: row?.examTime || '' })
   scoreDialog.value = true
   try {
     if (!courses.value.length) await loadCourses()
@@ -72,10 +73,21 @@ async function openScore() {
   } catch (error) { showError(error) }
 }
 async function saveScore() {
-  if (!scoreForm.courseId || !scoreForm.studentId) return ElMessage.warning('请填写课程 ID 和学生 ID')
+  if (!scoreForm.courseId || !scoreForm.studentId) return ElMessage.warning('请选择课程和学生')
   if (Number(scoreForm.status) === 0 && (scoreForm.score == null || Number(scoreForm.score) < 0 || Number(scoreForm.score) > 100)) return ElMessage.warning('成绩需在 0 至 100 之间')
-  try { await academicApi.saveScore({ ...scoreForm }); scoreDialog.value = false; ElMessage.success('成绩已保存'); await loadScores() }
+  if (scoreForm.usualScore != null && (Number(scoreForm.usualScore) < 0 || Number(scoreForm.usualScore) > 100)) return ElMessage.warning('平时成绩需在 0 至 100 之间')
+  const wasEditing = Boolean(scoreEditingId.value)
+  try { await academicApi.saveScore({ ...scoreForm }); scoreDialog.value = false; scoreEditingId.value = null; ElMessage.success(wasEditing ? '成绩已修改' : '成绩已保存'); await loadScores() }
   catch (error) { showError(error) }
+}
+async function removeScore(row) {
+  try {
+    await ElMessageBox.confirm(`确定删除「${row.studentName}」在「${row.courseName}」的成绩记录吗？`, '删除成绩', { type: 'warning', confirmButtonText: '确认删除', cancelButtonText: '取消' })
+    await academicApi.deleteScore(row.id)
+    if (statistics.value?.courseId === row.courseId) statistics.value = null
+    ElMessage.success('成绩记录已删除')
+    await loadScores()
+  } catch (error) { if (error !== 'cancel' && error !== 'close') showError(error) }
 }
 async function loadStatistics(courseId) {
   try { statistics.value = await academicApi.statistics(courseId) } catch (error) { showError(error) }
@@ -101,15 +113,15 @@ onMounted(() => { if (props.section === 'courses') loadCourses(); if (props.sect
     <template v-if="section === 'courses'">
       <div class="panel"><div class="panel-heading"><div><h2>课程列表</h2><p>共 {{ courseTotal }} 条课程记录</p></div><el-button v-if="isAdmin" type="primary" @click="openCourse()">＋ 新建课程</el-button></div>
         <div class="toolbar"><el-input v-model="courseQuery.keyword" clearable placeholder="搜索课程名称或教师" @keyup.enter="courseQuery.page = 1; loadCourses()" @clear="loadCourses"/><el-input v-model="courseQuery.semester" clearable placeholder="按学期筛选" @keyup.enter="loadCourses"/><el-button @click="courseQuery.page = 1; loadCourses()">筛选</el-button></div>
-        <el-table :data="courses" v-loading="busy" class="data-table"><el-table-column prop="courseName" label="课程名称" min-width="180"/><el-table-column prop="teacherName" label="授课教师" min-width="120"/><el-table-column label="开设班级" min-width="160"><template #default="{ row }">{{ row.className || '未指定' }}</template></el-table-column><el-table-column prop="credit" label="学分" width="90"/><el-table-column prop="semester" label="学期" min-width="140"/><el-table-column prop="courseTime" label="上课时间" min-width="140"/><el-table-column v-if="isAdmin" label="操作" width="150" fixed="right"><template #default="{ row }"><el-button link type="primary" @click="openCourse(row)">编辑</el-button><el-button link type="danger" @click="removeCourse(row)">删除</el-button></template></el-table-column><template #empty><span class="empty">暂无课程，请调整搜索条件或检查服务状态。</span></template></el-table>
+        <el-table :data="courses" v-loading="busy" class="data-table"><el-table-column prop="courseName" label="课程名称" min-width="180"/><el-table-column prop="teacherName" label="授课教师" min-width="120"/><el-table-column label="开设班级" min-width="160"><template #default="{ row }">{{ row.className || '未指定' }}</template></el-table-column><el-table-column prop="credit" label="学分" width="90"/><el-table-column prop="semester" label="学期" min-width="140"/><el-table-column prop="courseTime" label="上课时间" min-width="140"/><el-table-column label="上课地点" min-width="120"><template #default="{ row }">{{ row.room || '未指定' }}</template></el-table-column><el-table-column label="课程状态" width="100"><template #default="{ row }"><el-tag :type="['info','success','warning'][row.status] || 'info'" effect="light" round size="small">{{ ['未开课','开课中','已结课'][row.status] || '未开课' }}</el-tag></template></el-table-column><el-table-column v-if="isAdmin" label="操作" width="150" fixed="right"><template #default="{ row }"><el-button link type="primary" @click="openCourse(row)">编辑</el-button><el-button link type="danger" @click="removeCourse(row)">删除</el-button></template></el-table-column><template #empty><span class="empty">暂无课程，请调整搜索条件或检查服务状态。</span></template></el-table>
         <div class="pagination"><span>共 {{ courseTotal }} 条</span><el-pagination v-model:current-page="courseQuery.page" v-model:page-size="courseQuery.size" :total="courseTotal" layout="prev, pager, next" @current-change="loadCourses"/></div>
       </div>
     </template>
 
     <template v-else-if="section === 'scores'">
       <div class="panel"><div class="panel-heading"><div><h2>成绩记录</h2><p>{{ isTeacher ? '仅显示本人任教课程的成绩' : '按课程、学期或学生检索' }}</p></div><el-button v-if="isAdmin || isTeacher" type="primary" @click="openScore">＋ 录入成绩</el-button></div>
-        <div class="toolbar"><el-input v-model="scoreQuery.keyword" clearable placeholder="课程、学生姓名或学号" @keyup.enter="scoreQuery.page = 1; loadScores()" @clear="loadScores"/><el-input v-model="scoreQuery.courseId" clearable placeholder="课程 ID" @keyup.enter="loadScores"/><el-button @click="scoreQuery.page = 1; loadScores()">筛选</el-button></div>
-        <el-table :data="scores" v-loading="busy" class="data-table"><el-table-column prop="courseName" label="课程" min-width="160"/><el-table-column prop="studentName" label="学生" min-width="110"/><el-table-column prop="studentNo" label="学号" min-width="130"/><el-table-column prop="score" label="成绩" width="100"><template #default="{ row }">{{ row.score ?? '—' }}</template></el-table-column><el-table-column label="状态" width="100"><template #default="{ row }">{{ ['正常', '缺考', '缓考'][Number(row.status)] || '未录入' }}</template></el-table-column><el-table-column prop="examTime" label="考试日期" min-width="120"/><el-table-column v-if="isAdmin || isTeacher" label="课程统计" width="110"><template #default="{ row }"><el-button link type="primary" @click="loadStatistics(row.courseId)">查看统计</el-button></template></el-table-column><template #empty><span class="empty">暂无成绩记录。</span></template></el-table>
+        <div class="toolbar"><el-input v-model="scoreQuery.keyword" clearable placeholder="课程、学生姓名或学号" @keyup.enter="scoreQuery.page = 1; loadScores()" @clear="loadScores"/><el-button @click="scoreQuery.page = 1; loadScores()">筛选</el-button></div>
+        <el-table :data="scores" v-loading="busy" class="data-table"><el-table-column prop="courseName" label="课程" min-width="160"/><el-table-column prop="teacherName" label="授课教师" min-width="110"/><el-table-column prop="studentName" label="学生" min-width="110"/><el-table-column prop="studentNo" label="学号" min-width="130"/><el-table-column label="平时成绩" width="100"><template #default="{ row }">{{ row.usualScore ?? '—' }}</template></el-table-column><el-table-column prop="score" label="成绩" width="100"><template #default="{ row }">{{ row.score ?? '—' }}</template></el-table-column><el-table-column label="状态" width="100"><template #default="{ row }">{{ ['正常', '缺考', '缓考'][Number(row.status)] || '未录入' }}</template></el-table-column><el-table-column prop="examTime" label="考试日期" min-width="120"/><el-table-column v-if="isAdmin || isTeacher" label="课程统计" width="110"><template #default="{ row }"><el-button link type="primary" @click="loadStatistics(row.courseId)">查看统计</el-button></template></el-table-column><el-table-column v-if="isAdmin || isTeacher" label="操作" width="130" fixed="right"><template #default="{ row }"><el-button link type="primary" @click="openScore(row)">修改</el-button><el-button link type="danger" @click="removeScore(row)">删除</el-button></template></el-table-column><template #empty><span class="empty">暂无成绩记录。</span></template></el-table>
         <div class="pagination"><span>共 {{ scoreTotal }} 条</span><el-pagination v-model:current-page="scoreQuery.page" v-model:page-size="scoreQuery.size" :total="scoreTotal" layout="prev, pager, next" @current-change="loadScores"/></div>
       </div>
       <div v-if="statistics" class="panel stats-panel"><div class="panel-heading"><div><h2>{{ statistics.courseName }} · 成绩概况</h2><p>统计结果由成绩服务计算</p></div><el-button text @click="statistics = null">收起</el-button></div><div class="metrics"><div><small>平均分</small><b>{{ Number(statistics.avgScore || 0).toFixed(1) }}</b></div><div><small>最高分</small><b>{{ statistics.maxScore ?? '—' }}</b></div><div><small>最低分</small><b>{{ statistics.minScore ?? '—' }}</b></div><div><small>及格率</small><b>{{ Math.round(Number(statistics.passRate || 0) * 100) }}%</b></div></div><div class="distribution"><span v-for="item in statistics.distribution || []" :key="item.segment">{{ item.segment }}<b>{{ item.count }}</b></span></div></div>
@@ -121,8 +133,8 @@ onMounted(() => { if (props.section === 'courses') loadCourses(); if (props.sect
         <article class="panel form-panel security-panel"><div class="panel-heading"><div><h2>账户安全</h2><p>修改密码后请使用新密码重新登录</p></div></div><el-form label-position="top" class="form-grid"><el-form-item label="当前密码"><el-input v-model="passwordForm.oldPassword" type="password" show-password autocomplete="current-password"/></el-form-item><el-form-item label="新密码"><el-input v-model="passwordForm.newPassword" type="password" show-password autocomplete="new-password"/></el-form-item><el-form-item class="wide" label="确认新密码"><el-input v-model="passwordForm.confirmPassword" type="password" show-password autocomplete="new-password"/></el-form-item></el-form><el-button @click="updatePassword">更新密码</el-button></article></div></div>
     </template>
 
-    <el-dialog v-model="courseDialog" :title="editingId ? '编辑课程' : '新建课程'" width="520px"><el-form label-position="top" class="dialog-form"><el-form-item label="课程名称" required><el-input v-model="courseForm.courseName" placeholder="例如：数据结构"/></el-form-item><div class="dialog-grid"><el-form-item label="学分"><el-input-number v-model="courseForm.credit" :min="0.5" :max="10" :step="0.5"/></el-form-item><el-form-item label="任课教师"><el-select v-model="courseForm.teacherId" clearable filterable placeholder="选择教师"><el-option v-for="item in teachers" :key="item.id" :label="`${item.name}（${item.teacherNo}）`" :value="item.id"/></el-select></el-form-item></div><el-form-item label="开设班级"><el-select v-model="courseForm.classId" clearable filterable placeholder="选择班级（仅该班学生可见）"><el-option v-for="item in classes" :key="item.id" :label="item.className" :value="item.id"/></el-select></el-form-item><el-form-item label="学期"><el-input v-model="courseForm.semester" placeholder="2026-2027-1"/></el-form-item><el-form-item label="上课时间"><el-input v-model="courseForm.courseTime" placeholder="例如：周一 1-2 节"/></el-form-item></el-form><template #footer><el-button @click="courseDialog = false">取消</el-button><el-button type="primary" @click="saveCourse">保存课程</el-button></template></el-dialog>
-    <el-dialog v-model="scoreDialog" title="录入成绩" width="480px"><el-form label-position="top" class="dialog-form"><div class="dialog-grid"><el-form-item label="课程" required><el-select v-model="scoreForm.courseId" filterable placeholder="选择课程"><el-option v-for="item in courses" :key="item.id" :label="item.courseName" :value="item.id"/></el-select></el-form-item><el-form-item label="学生" required><el-select v-model="scoreForm.studentId" filterable placeholder="选择学生"><el-option v-for="item in students" :key="item.id" :label="`${item.name}（${item.studentNo}）`" :value="item.id"/></el-select></el-form-item></div><el-form-item label="成绩状态"><el-select v-model="scoreForm.status"><el-option label="正常" :value="0"/><el-option label="缺考" :value="1"/><el-option label="缓考" :value="2"/></el-select></el-form-item><el-form-item v-if="Number(scoreForm.status) === 0" label="成绩（0–100）"><el-input-number v-model="scoreForm.score" :min="0" :max="100" :precision="1"/></el-form-item><el-form-item label="考试日期"><el-input v-model="scoreForm.examTime" type="date"/></el-form-item></el-form><template #footer><el-button @click="scoreDialog = false">取消</el-button><el-button type="primary" @click="saveScore">保存成绩</el-button></template></el-dialog>
+    <el-dialog v-model="courseDialog" :title="editingId ? '编辑课程' : '新建课程'" width="520px"><el-form label-position="top" class="dialog-form"><el-form-item label="课程名称" required><el-input v-model="courseForm.courseName" placeholder="例如：数据结构"/></el-form-item><div class="dialog-grid"><el-form-item label="学分"><el-input-number v-model="courseForm.credit" :min="0.5" :max="10" :step="0.5"/></el-form-item><el-form-item label="任课教师"><el-select v-model="courseForm.teacherId" clearable filterable placeholder="选择教师"><el-option v-for="item in teachers" :key="item.id" :label="`${item.name}（${item.teacherNo}）`" :value="item.id"/></el-select></el-form-item></div><el-form-item label="开设班级"><el-select v-model="courseForm.classId" clearable filterable placeholder="选择班级（仅该班学生可见）"><el-option v-for="item in classes" :key="item.id" :label="item.className" :value="item.id"/></el-select></el-form-item><el-form-item label="学期"><el-input v-model="courseForm.semester" placeholder="2026-2027-1"/></el-form-item><div class="dialog-grid"><el-form-item label="上课时间"><el-input v-model="courseForm.courseTime" placeholder="例如：周一 1-2 节"/></el-form-item><el-form-item label="上课地点"><el-input v-model="courseForm.room" maxlength="100" placeholder="例如：教 2-301"/></el-form-item></div><el-form-item label="课程状态"><el-select v-model="courseForm.status" style="width:100%"><el-option label="未开课" :value="0"/><el-option label="开课中" :value="1"/><el-option label="已结课" :value="2"/></el-select></el-form-item></el-form><template #footer><el-button @click="courseDialog = false">取消</el-button><el-button type="primary" @click="saveCourse">保存课程</el-button></template></el-dialog>
+    <el-dialog v-model="scoreDialog" :title="scoreEditingId ? '修改成绩' : '录入成绩'" width="480px"><el-form label-position="top" class="dialog-form"><div class="dialog-grid"><el-form-item label="课程" required><el-select v-model="scoreForm.courseId" :disabled="Boolean(scoreEditingId)" filterable placeholder="选择课程"><el-option v-for="item in courses" :key="item.id" :label="item.courseName" :value="item.id"/></el-select></el-form-item><el-form-item label="学生" required><el-select v-model="scoreForm.studentId" :disabled="Boolean(scoreEditingId)" filterable placeholder="选择学生"><el-option v-for="item in students" :key="item.id" :label="`${item.name}（${item.studentNo}）`" :value="item.id"/></el-select></el-form-item></div><el-form-item label="成绩状态"><el-select v-model="scoreForm.status"><el-option label="正常" :value="0"/><el-option label="缺考" :value="1"/><el-option label="缓考" :value="2"/></el-select></el-form-item><div v-if="Number(scoreForm.status) === 0" class="dialog-grid"><el-form-item label="平时成绩（0–100）"><el-input-number v-model="scoreForm.usualScore" :min="0" :max="100" :precision="1"/></el-form-item><el-form-item label="成绩（0–100）"><el-input-number v-model="scoreForm.score" :min="0" :max="100" :precision="1"/></el-form-item></div><el-form-item label="考试日期"><el-input v-model="scoreForm.examTime" type="date"/></el-form-item></el-form><template #footer><el-button @click="scoreDialog = false">取消</el-button><el-button type="primary" @click="saveScore">{{ scoreEditingId ? '保存修改' : '保存成绩' }}</el-button></template></el-dialog>
   </section>
 </template>
 

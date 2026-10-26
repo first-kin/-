@@ -23,6 +23,7 @@ public:
     ADD_METHOD_TO(DeptController::deptCreate, "/api/departments", Post, "JwtFilter");
     ADD_METHOD_TO(DeptController::deptUpdate, "/api/departments/{id}", Put, "JwtFilter");
     ADD_METHOD_TO(DeptController::deptRemove, "/api/departments/{id}", Delete, "JwtFilter");
+    ADD_METHOD_TO(DeptController::majorList, "/api/majors", Get, "JwtFilter");
     ADD_METHOD_TO(DeptController::classList, "/api/classes", Get, "JwtFilter");
     ADD_METHOD_TO(DeptController::classCreate, "/api/classes", Post, "JwtFilter");
     ADD_METHOD_TO(DeptController::classUpdate, "/api/classes/{id}", Put, "JwtFilter");
@@ -34,6 +35,18 @@ public:
                   function<void(const HttpResponsePtr &)> &&callback)
     {
         callback(api::toResponse(svc::DeptService::deptList()));
+    }
+
+    // GET /api/majors —— admin 用于选择班级所属专业
+    void majorList(const HttpRequestPtr &req,
+                   function<void(const HttpResponsePtr &)> &&callback)
+    {
+        if (!util::isAdmin(req))
+        {
+            callback(api::toResponse(util::fail(util::kNoPerm, "无权限访问该资源")));
+            return;
+        }
+        callback(api::toResponse(svc::DeptService::majorList()));
     }
 
     // POST /api/departments —— 仅 admin

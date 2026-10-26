@@ -10,7 +10,7 @@ using std::string;
 namespace model
 {
 
-// 成绩实体，对应 scores 表；studentNo / studentName / courseName 为联表展示字段
+// 成绩实体，对应 scores 表；studentNo / studentName / courseName / teacherName 为联表展示字段
 // hasScore 标识 score 列是否为空（缺考/缓考时可为空）
 struct Score
 {
@@ -20,7 +20,10 @@ struct Score
     string studentName;
     int64_t courseId = 0;
     string courseName;
+    string teacherName;  // 授课教师（联表展示字段）
     double credit = 0.0;  // 课程学分（联表展示字段）
+    bool hasUsualScore = false;  // 平时成绩是否已录入
+    double usualScore = 0.0;
     bool hasScore = false;
     double score = 0.0;
     int status = 0;  // 0 正常 / 1 缺考 / 2 缓考
@@ -112,6 +115,22 @@ inline bool scoreFromJson(const Json::Value &j, Score &s, string &err)
         s.hasScore = false;
     }
 
+    if (j.isMember("usualScore") && !j["usualScore"].isNull())
+    {
+        if (!j["usualScore"].isNumeric())
+        {
+            err = "usualScore(平时成绩)必须为数字";
+            return false;
+        }
+        s.usualScore = j["usualScore"].asDouble();
+        if (s.usualScore < 0.0 || s.usualScore > 100.0)
+        {
+            err = "usualScore(平时成绩)必须在 0~100 之间";
+            return false;
+        }
+        s.hasUsualScore = true;
+    }
+
     if (j.isMember("examTime") && j["examTime"].isString())
         s.examTime = j["examTime"].asString();
 
@@ -127,7 +146,9 @@ inline Json::Value scoreToJson(const Score &s)
     j["studentName"] = s.studentName;
     j["courseId"] = static_cast<Json::Int64>(s.courseId);
     j["courseName"] = s.courseName;
+    j["teacherName"] = s.teacherName;
     j["credit"] = s.credit;
+    j["usualScore"] = s.hasUsualScore ? Json::Value(s.usualScore) : Json::Value(Json::nullValue);
     j["score"] = s.hasScore ? Json::Value(s.score) : Json::Value(Json::nullValue);
     j["status"] = s.status;
     j["examTime"] = s.examTime;

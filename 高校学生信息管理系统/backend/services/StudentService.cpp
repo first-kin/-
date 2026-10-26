@@ -1,5 +1,6 @@
 #include "services/StudentService.h"
 #include <exception>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -243,6 +244,75 @@ api::Result StudentService::detail(int64_t id, int64_t selfTeacherUserId)
     }
 }
 
+api::Result StudentService::courseIds(int64_t studentId)
+{
+    try
+    {
+        auto client = api::db();
+        auto student = client->execSqlSync(
+            "SELECT id FROM students WHERE id = ? AND is_deleted = 0", studentId);
+        if (student.empty())
+            return util::fail(util::kNotFound, "学生不存在");
+
+        auto rows = client->execSqlSync(
+            "SELECT course_id FROM student_courses WHERE student_id = ? ORDER BY course_id",
+            studentId);
+        Json::Value ids(Json::arrayValue);
+        for (const auto &row : rows)
+            ids.append(static_cast<Json::Int64>(row["course_id"].as<int64_t>()));
+        return util::okData(ids);
+    }
+    catch (const exception &e)
+    {
+        return util::fail(util::kDb, string("查询学生选课失败: ") + e.what());
+    }
+}
+
+api::Result StudentService::setCourseIds(int64_t studentId, const vector<int64_t> &courseIds)
+{
+    try
+    {
+        auto client = api::db();
+        auto student = client->execSqlSync(
+            "SELECT id FROM students WHERE id = ? AND is_deleted = 0", studentId);
+        if (student.empty())
+            return util::fail(util::kNotFound, "学生不存在");
+
+        set<int64_t> uniqueIds;
+        for (const int64_t courseId : courseIds)
+        {
+            if (courseId <= 0)
+                return util::fail(util::kParam, "课程 ID 非法");
+            uniqueIds.insert(courseId);
+        }
+        for (const int64_t courseId : uniqueIds)
+        {
+            auto course = client->execSqlSync(
+                "SELECT id FROM courses WHERE id = ? AND is_deleted = 0", courseId);
+            if (course.empty())
+                return util::fail(util::kParam, "所选课程不存在或已删除");
+        }
+
+        auto trans = client->newTransaction();
+        trans->execSqlSync("DELETE FROM student_courses WHERE student_id = ?", studentId);
+        for (const int64_t courseId : uniqueIds)
+            trans->execSqlSync(
+                "INSERT INTO student_courses (student_id, course_id) VALUES (?, ?)",
+                studentId, courseId);
+
+        Json::Value data(Json::objectValue);
+        data["studentId"] = static_cast<Json::Int64>(studentId);
+        data["courseIds"] = Json::Value(Json::arrayValue);
+        for (const int64_t courseId : uniqueIds)
+            data["courseIds"].append(static_cast<Json::Int64>(courseId));
+        return util::okData(data, "学生选课已更新");
+    }
+    catch (const exception &e)
+    {
+        return util::fail(util::kDb, string("保存学生选课失败: ") + e.what());
+    }
+}
+
 api::Result StudentService::create(const Json::Value &body)
 {
     string studentNo, name, gender, err;
@@ -344,10 +414,18 @@ api::Result StudentService::update(int64_t id, const Json::Value &body)
             "UPDATE students SET name = ?, gender = ?, birth_date = NULLIF(?, ''), "
             "class_id = ?, phone = NULLIF(?, ''), email = NULLIF(?, ''), "
             "address = NULLIF(?, '') WHERE id = ? AND is_deleted = 0",
-            id, name, gender, hasBirth ? birthDate : string(), classId,
+            name, gender, hasBirth ? birthDate : string(), classId,
             hasPhone ? phone : string(), hasEmail ? email : string(),
-            hasAddr ? address : string());
-        (void)res;
+            hasAddr ? address : string(), id);
+        if (res.affectedRows() == 0)
+        {
+            // MySQL 对“数据未变化”和“未更新到记录”都会返回 0；
+            // 用学生当前记录确认目标仍存在，避免把未执行的更新报告为成功。
+            auto updated = client->execSqlSync(
+                "SELECT id FROM students WHERE id = ? AND is_deleted = 0 LIMIT 1", id);
+            if (updated.empty())
+                return util::fail(util::kNotFound, "学生不存在或信息未能更新");
+        }
         return util::okMsg("保存成功");
     }
     catch (const exception &e)

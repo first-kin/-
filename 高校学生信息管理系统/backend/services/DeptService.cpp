@@ -21,6 +21,14 @@ struct DeptRow
     string deptName;
 };
 
+struct MajorRow
+{
+    int64_t id = 0;
+    int64_t deptId = 0;
+    string majorName;
+    string deptName;
+};
+
 // 一行班级记录（headTeacherId = 0 表示数据库 NULL）
 struct ClassRow
 {
@@ -38,6 +46,16 @@ Json::Value deptToJson(const DeptRow &d)
     Json::Value j(Json::objectValue);
     j["id"] = static_cast<Json::Int64>(d.id);
     j["deptName"] = d.deptName;
+    return j;
+}
+
+Json::Value majorToJson(const MajorRow &m)
+{
+    Json::Value j(Json::objectValue);
+    j["id"] = static_cast<Json::Int64>(m.id);
+    j["majorName"] = m.majorName;
+    j["deptId"] = static_cast<Json::Int64>(m.deptId);
+    j["deptName"] = m.deptName;
     return j;
 }
 
@@ -97,6 +115,33 @@ api::Result DeptService::deptList()
     catch (const exception &e)
     {
         return util::fail(util::kDb, string("查询院系列表失败: ") + e.what());
+    }
+}
+
+api::Result DeptService::majorList()
+{
+    try
+    {
+        auto rows = api::db()->execSqlSync(
+            "SELECT m.id, m.major_name, m.dept_id, d.dept_name "
+            "FROM majors m JOIN departments d ON d.id = m.dept_id "
+            "ORDER BY d.id, m.id");
+
+        Json::Value list(Json::arrayValue);
+        for (const auto &row : rows)
+        {
+            MajorRow major;
+            major.id = row["id"].as<int64_t>();
+            major.majorName = row["major_name"].as<string>();
+            major.deptId = row["dept_id"].as<int64_t>();
+            major.deptName = row["dept_name"].as<string>();
+            list.append(majorToJson(major));
+        }
+        return util::okData(list);
+    }
+    catch (const exception &e)
+    {
+        return util::fail(util::kDb, string("查询专业列表失败: ") + e.what());
     }
 }
 

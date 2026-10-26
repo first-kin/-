@@ -40,7 +40,7 @@
               <template #default="{ row }">{{ row.deptName || '未设置' }}</template>
             </el-table-column>
             <el-table-column label="专业" min-width="140">
-              <template #default="{ row }">{{ row.majorName || `专业 #${row.majorId}` }}</template>
+              <template #default="{ row }">{{ row.majorName || '未设置专业' }}</template>
             </el-table-column>
             <el-table-column prop="grade" label="入学年级" width="120" />
             <el-table-column label="班主任" min-width="140">
@@ -74,9 +74,10 @@
         <el-form-item label="班级名称" prop="className">
           <el-input v-model.trim="classForm.className" maxlength="100" placeholder="如：软件2505班" />
         </el-form-item>
-        <el-form-item label="专业 ID" prop="majorId">
-          <el-input-number v-model="classForm.majorId" :min="1" :precision="0" controls-position="right" />
-          <div class="field-hint">按专业基础数据中的 ID 填写；当前接口文档未定义专业管理接口。</div>
+        <el-form-item label="所属专业" prop="majorId">
+          <el-select v-model="classForm.majorId" filterable placeholder="请选择专业">
+            <el-option v-for="item in majors" :key="item.id" :label="`${item.majorName}（${item.deptName}）`" :value="item.id" />
+          </el-select>
         </el-form-item>
         <el-form-item label="入学年级" prop="grade">
           <el-input-number v-model="classForm.grade" :min="2000" :max="2100" :precision="0" controls-position="right" />
@@ -103,6 +104,7 @@ import { managementApi } from '../api/management.js'
 const activeTab = ref('departments')
 const departments = ref([])
 const classes = ref([])
+const majors = ref([])
 const teachers = ref([])
 const departmentLoading = ref(false)
 const classLoading = ref(false)
@@ -116,13 +118,13 @@ const classId = ref(null)
 const departmentEditing = computed(() => departmentId.value !== null)
 const classEditing = computed(() => classId.value !== null)
 const departmentForm = reactive({ deptName: '' })
-const classForm = reactive({ className: '', majorId: 1, grade: new Date().getFullYear(), headTeacherId: undefined })
+const classForm = reactive({ className: '', majorId: undefined, grade: new Date().getFullYear(), headTeacherId: undefined })
 const departmentRules = {
   deptName: [{ required: true, message: '请输入院系名称', trigger: 'blur' }],
 }
 const classRules = {
   className: [{ required: true, message: '请输入班级名称', trigger: 'blur' }],
-  majorId: [{ required: true, type: 'number', message: '请输入有效的专业 ID', trigger: 'change' }],
+  majorId: [{ required: true, type: 'number', message: '请选择所属专业', trigger: 'change' }],
   grade: [{ required: true, type: 'number', message: '请输入入学年级', trigger: 'change' }],
 }
 
@@ -203,7 +205,7 @@ function openClassEditor(row) {
   classId.value = row?.id ?? null
   Object.assign(classForm, {
     className: row?.className || '',
-    majorId: Number(row?.majorId) || 1,
+    majorId: row?.majorId ? Number(row.majorId) : undefined,
     grade: Number(row?.grade) || new Date().getFullYear(),
     headTeacherId: row?.headTeacherId ? Number(row.headTeacherId) : undefined,
   })
@@ -261,9 +263,12 @@ onMounted(async () => {
     loadDepartments(),
     loadClasses(),
     managementApi.teachers({ page: 1, size: 100 }),
+    managementApi.majors(),
   ])
   if (results[2].status === 'fulfilled') teachers.value = results[2].value.list
   else ElMessage.error(results[2].reason?.message || '班主任选项加载失败')
+  if (results[3].status === 'fulfilled') majors.value = results[3].value
+  else ElMessage.error(results[3].reason?.message || '专业选项加载失败')
 })
 </script>
 

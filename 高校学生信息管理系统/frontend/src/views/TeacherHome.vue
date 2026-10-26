@@ -4,7 +4,7 @@
     <div class="welcome">
       <div class="eyebrow">TEACHER PORTAL</div>
       <h1>欢迎回来，{{ profile.name || '老师' }}</h1>
-      <p>今日 {{ today }} · 本学期已登记授课 {{ stats.courseCount || 0 }} 门，覆盖学生 {{ stats.studentCount || 0 }} 人</p>
+      <p>今日 {{ today }} · 本学期已登记授课 {{ stats.courseCount || 0 }} 门</p>
     </div>
 
     <!-- 快捷统计 -->
@@ -52,6 +52,7 @@
             <div class="course-meta">
               <span>🎓 {{ c.className || '未指定班级' }}</span>
               <span>⏱ {{ c.courseTime || '时间待定' }}</span>
+              <span>📍 {{ c.room || '地点待定' }}</span>
               <span>⭐ {{ c.credit }} 学分</span>
             </div>
           </div>
@@ -132,30 +133,25 @@ async function loadStats() {
     const courses = await academicApi.courses({ page: 1, size: 50 })
     myCourses.value = courses?.list || []
 
-    // 2. 成绩统计
-    let gradedCount = 0
-    let totalScore = 0
-    let scoreCnt = 0
+    // 成绩统计仅限当前教师任教课程，成绩明细同样按后端权限范围返回。
     const scores = await academicApi.scores({ page: 1, size: 500 })
     const list = Array.isArray(scores) ? scores : (scores?.list || [])
-    list.forEach(s => {
-      gradedCount++
-      if (s.score != null && s.status === 0) { totalScore += Number(s.score); scoreCnt++ }
-    })
-
-    // 3. 覆盖学生数（每个课程的学生数）——简化：用成绩列表的学生去重数
-    const students = new Set(list.map(s => s.studentId).filter(Boolean))
-
+    let totalScore = 0
+    let scoreCount = 0
+    for (const item of list) {
+      if (item.score != null && Number(item.status) === 0) {
+        totalScore += Number(item.score)
+        scoreCount += 1
+      }
+    }
+    const students = new Set(list.map((item) => item.studentId).filter(Boolean))
     stats.value = {
       courseCount: myCourses.value.length,
       studentCount: students.size,
-      gradedCount,
-      avgScore: scoreCnt ? (totalScore / scoreCnt).toFixed(1) : '—',
+      gradedCount: list.length,
+      avgScore: scoreCount ? (totalScore / scoreCount).toFixed(1) : '—',
     }
-
-    // 4. 最近考试日期
-    const withExam = list.filter(s => s.examTime).sort((a,b) => b.examTime.localeCompare(a.examTime))
-    latestExam.value = withExam[0]?.examTime || '暂无考试记录'
+    latestExam.value = list.filter((item) => item.examTime).sort((a, b) => b.examTime.localeCompare(a.examTime))[0]?.examTime || '暂无考试记录'
   } catch (e) {
     console.warn('teacher home stats load failed', e)
   }

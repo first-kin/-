@@ -92,16 +92,15 @@ public:
         else
             teacherFilter = toInt64(req->getParameter("teacherId"), 0);
 
-        // 学生只能看到本班开设的课程：users.id -> students.class_id
+        // 学生默认跟随班级选课：返回本班开设的全部课程
         int64_t classFilter = 0;
+        int64_t studentFilter = 0;
         if (role == "student")
         {
             auto rows = api::db()->execSqlSync(
                 "SELECT class_id FROM students WHERE user_id = ? AND is_deleted = 0 LIMIT 1", uid);
-            // 未分班的学生用 -1 过滤，查不到任何课程
-            classFilter = (!rows.empty() && !rows[0]["class_id"].isNull())
-                              ? rows[0]["class_id"].as<int64_t>()
-                              : -1;
+            // 找不到学生档案时用 -1 过滤，不能返回任何课程。
+            classFilter = rows.empty() ? -1 : rows[0]["class_id"].as<int64_t>();
         }
         else
         {
@@ -109,7 +108,8 @@ public:
         }
 
         callback(api::toResponse(
-            svc::CourseService::list(keyword, page, size, teacherFilter, semester, classFilter)));
+            svc::CourseService::list(keyword, page, size, teacherFilter, semester, classFilter,
+                                     studentFilter)));
     }
 
     // GET /api/courses/{id}

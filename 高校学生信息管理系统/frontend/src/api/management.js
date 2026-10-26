@@ -1,4 +1,5 @@
 import request from './request.js'
+import { academicApi } from './academic.js'
 
 const mock = import.meta.env?.VITE_USE_MOCK !== 'false'
 
@@ -6,6 +7,12 @@ let departments = [
   { id: 1, deptName: '计算机学院' },
   { id: 2, deptName: '数学学院' },
   { id: 3, deptName: '外国语学院' },
+]
+
+let majors = [
+  { id: 1, majorName: '计算机科学与技术', deptId: 1, deptName: '计算机学院' },
+  { id: 3, majorName: '软件工程', deptId: 1, deptName: '计算机学院' },
+  { id: 5, majorName: '数学与应用数学', deptId: 2, deptName: '数学学院' },
 ]
 
 let teachers = [
@@ -27,6 +34,7 @@ let students = [
   { id: 3, studentNo: '2024030101', name: '周同学', gender: '女', birthDate: '2006-08-19', classId: 2, className: '计科2401班', phone: '13700001001', email: 'zhou@example.edu.cn', address: '' },
   { id: 4, studentNo: '2025030501', name: '吴同学', gender: '女', birthDate: '2007-11-02', classId: 3, className: '数学2501班', phone: '13600005001', email: 'wu@example.edu.cn', address: '' },
 ]
+const studentCourseSelections = new Map()
 
 const clone = (value) => JSON.parse(JSON.stringify(value))
 const listFrom = (data) => Array.isArray(data) ? data : (data?.list || [])
@@ -57,6 +65,22 @@ export const managementApi = {
     const item = students.find((entry) => entry.id === id)
     if (!item) throw new Error('学生记录不存在')
     return clone(item)
+  },
+
+  studentCourses: async (id) => {
+    if (!mock) return request.get(`/students/${id}/courses`)
+    if (!students.some((entry) => Number(entry.id) === Number(id))) throw new Error('学生记录不存在')
+    return clone(studentCourseSelections.get(Number(id)) || [])
+  },
+
+  setStudentCourses: async (id, courseIds = []) => {
+    if (!mock) return request.put(`/students/${id}/courses`, { courseIds })
+    if (!students.some((entry) => Number(entry.id) === Number(id))) throw new Error('学生记录不存在')
+    const ids = [...new Set(courseIds.map(Number))]
+    const allCourses = (await academicApi.courses({ page: 1, size: 100 })).list || []
+    if (ids.some((courseId) => !allCourses.some((course) => Number(course.id) === courseId))) throw new Error('所选课程不存在')
+    studentCourseSelections.set(Number(id), ids)
+    return { studentId: Number(id), courseIds: clone(ids) }
   },
 
   addStudent: async (data) => {
@@ -129,6 +153,11 @@ export const managementApi = {
   departments: async () => {
     if (!mock) return listFrom(await request.get('/departments'))
     return clone(departments)
+  },
+
+  majors: async () => {
+    if (!mock) return listFrom(await request.get('/majors'))
+    return clone(majors)
   },
 
   addDepartment: async (data) => {

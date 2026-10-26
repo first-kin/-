@@ -40,11 +40,11 @@
               </tbody>
             </table>
           </div>
-          <div v-if="schedule.unparsed.length" class="tt-hint">未识别上课时间：{{schedule.unparsed.map(c=>c.name).join('、')}}（可在课程编辑中按“周一 1-2 节”格式填写）</div>
+          <div v-if="schedule.unparsed.length" class="tt-hint">未识别上课时间：{{schedule.unparsed.map(c=>c.name).join('、')}}</div>
         </div>
         <div class="content-card">
-          <div class="card-heading"><div><h2>课程列表</h2><p>共 {{filteredCourses.length}} 门课程 · 支持课程名称、编号及教师检索</p></div><el-button type="primary" @click="openCourse()">＋ 新增课程</el-button></div>
-          <div class="toolbar"><el-input v-model="courseKeyword" clearable placeholder="搜索课程名称、课程编号或教师..." class="search-input"><template #prefix>⌕</template></el-input><el-select v-model="courseStatus" style="width:140px"><el-option label="全部状态" value="全部状态"/><el-option label="开课中" value="开课中"/><el-option label="已结课" value="已结课"/></el-select><span class="toolbar-spacer"></span><span class="muted">最近更新：今天</span></div>
+          <div class="card-heading"><div><h2>课程列表</h2><p>共 {{filteredCourses.length}} 门课程 · 支持课程名称、编号检索</p></div></div>
+          <div class="toolbar"><el-input v-model="courseKeyword" clearable placeholder="搜索课程名称、课程编号或教师..." class="search-input"><template #prefix>⌕</template></el-input><el-select v-model="courseStatus" style="width:140px"><el-option label="全部状态" value="全部状态"/><el-option label="未开课" value="未开课"/><el-option label="开课中" value="开课中"/><el-option label="已结课" value="已结课"/></el-select><span class="toolbar-spacer"></span><span class="muted">最近更新：今天</span></div>
           <el-table :data="pagedCourses" style="width:100%" row-class-name="table-row" empty-text="没有找到匹配的课程">
             <el-table-column label="课程信息" min-width="230"><template #default="{row}"><div class="course-cell"><div class="course-icon" :class="iconClass(row.code)">{{row.name.slice(0,1)}}</div><div><b>{{row.name}}</b><small>{{row.code}}</small></div></div></template></el-table-column>
             <el-table-column prop="teacher" label="授课教师" min-width="105"/>
@@ -52,7 +52,6 @@
             <el-table-column prop="time" label="上课时间" min-width="130"/>
             <el-table-column prop="room" label="上课地点" min-width="125"/>
             <el-table-column label="课程状态" width="100"><template #default="{row}"><span class="status-pill" :class="row.status==='开课中'?'success':'neutral'"><i></i>{{row.status}}</span></template></el-table-column>
-            <el-table-column label="操作" width="115" fixed="right"><template #default="{row}"><el-button link type="primary" @click="openCourse(row)">编辑</el-button><el-button link type="danger" @click="removeCourse(row)">删除</el-button></template></el-table-column>
           </el-table>
           <div class="table-footer"><span>展示第 {{filteredCourses.length?((page-1)*pageSize+1):0}}–{{Math.min(page*pageSize,filteredCourses.length)}} 条，共 {{filteredCourses.length}} 条</span><el-pagination v-model:current-page="page" v-model:page-size="pageSize" :page-sizes="[5,10,20]" layout="prev, pager, next, sizes" :total="filteredCourses.length" small/></div>
         </div>
@@ -71,7 +70,6 @@
           <el-table :data="filteredScores" style="width:100%" empty-text="暂无成绩记录"><el-table-column label="课程" min-width="230"><template #default="{row}"><div class="course-cell"><div class="course-icon score-icon">{{row.courseName.slice(0,1)}}</div><div><b>{{row.courseName}}</b><small>{{row.courseCode}} · {{row.term}}</small></div></div></template></el-table-column><el-table-column prop="teacher" label="授课教师" min-width="100"/><el-table-column prop="usual" label="平时成绩" width="100"/><el-table-column prop="exam" label="期末成绩" width="100"/><el-table-column label="课程总评" width="120"><template #default="{row}"><div class="score-total" :class="scoreClass(row.total)">{{row.total}}<span> / 100</span></div></template></el-table-column><el-table-column prop="credit" label="学分" width="80"/><el-table-column label="状态" width="100"><template #default="{row}"><span class="status-pill success"><i></i>{{row.status}}</span></template></el-table-column></el-table>
           <div class="table-footer"><span>共 {{filteredScores.length}} 条成绩记录</span><span class="muted">成绩计算规则以课程大纲为准</span></div>
         </div>
-        <div class="bottom-note"><span class="note-icon">i</span><div><b>成绩说明</b><p>如发现成绩有误，请在成绩发布后及时联系任课教师核实。演示数据仅用于界面展示，接入后端后将显示真实成绩。</p></div></div>
       </template>
       <template v-else>
         <div class="page-heading"><div><div class="eyebrow">PERSONAL WORKSPACE</div><h1>个人中心</h1><p>管理你的个人资料与账户安全设置。</p></div><el-button type="primary" @click="saveProfile" :loading="saving">保存修改</el-button></div>
@@ -82,13 +80,12 @@
       <footer class="footer">© 2026 知行校园教务管理平台 <span>让每一次学习，都有迹可循。</span></footer>
     </section>
   </main>
-  <el-dialog v-model="courseDialog" :title="editing?'编辑课程':'新增课程'" width="560px" destroy-on-close><el-form ref="courseFormRef" :model="courseForm" :rules="courseRules" label-position="top"><div class="form-grid"><el-form-item label="课程编号" prop="code"><el-input v-model="courseForm.code" placeholder="如 SE203"/></el-form-item><el-form-item label="课程名称" prop="name"><el-input v-model="courseForm.name" placeholder="请输入课程名称"/></el-form-item><el-form-item label="授课教师" prop="teacher"><el-input v-model="courseForm.teacher" placeholder="请输入教师姓名"/></el-form-item><el-form-item label="学分" prop="credit"><el-input-number v-model="courseForm.credit" :min="0.5" :max="10" :step="0.5" style="width:100%"/></el-form-item><el-form-item label="学期" prop="term"><el-input v-model="courseForm.term"/></el-form-item><el-form-item label="上课时间" prop="time"><el-input v-model="courseForm.time" placeholder="如 周一 1-2 节"/></el-form-item><el-form-item label="上课地点" prop="room"><el-input v-model="courseForm.room" placeholder="如 教 2-301"/></el-form-item></div></el-form><template #footer><el-button @click="courseDialog=false">取消</el-button><el-button type="primary" @click="submitCourse">确认保存</el-button></template></el-dialog>
 </div>
 </template>
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { api } from '../api'
 import { logout } from '../api/auth'
 import { useAuthStore } from '../stores/auth'
@@ -158,17 +155,10 @@ const blockOf=(day,period)=>schedule.value.blocks[`${day}-${period}`]
 const blockSpan=(day,period)=>blockOf(day,period)?.span||1
 const isCovered=(day,period)=>schedule.value.covered.has(`${day}-${period}`)
 const scheduledCount=computed(()=>new Set(Object.values(schedule.value.blocks).map(b=>b.course.id)).size)
-const courseDialog=ref(false),editing=ref(false),courseFormRef=ref()
-const blankCourse=()=>({code:'',name:'',teacher:'',credit:2,term:'2026-2027-1',time:'',room:''})
-const courseForm=reactive(blankCourse())
-const courseRules={code:[{required:true,message:'请填写课程编号',trigger:'blur'}],name:[{required:true,message:'请填写课程名称',trigger:'blur'}],teacher:[{required:true,message:'请填写授课教师',trigger:'blur'}],credit:[{required:true,message:'请填写学分',trigger:'change'}],term:[{required:true,message:'请填写学期',trigger:'blur'}]}
 const passwordForm=reactive({oldPassword:'',newPassword:'',confirmPassword:''})
 function iconClass(code){return ['SE','CS'].some(x=>code.startsWith(x))?'course-blue':code.startsWith('MA')?'course-violet':code.startsWith('EN')?'course-orange':'course-green'}
 function scoreClass(n){return n>=90?'excellent':n>=80?'good':n>=60?'pass':'fail'}
 async function load(){try{courseList.value=await api.courses();scoreList.value=await api.scores();Object.assign(profile,await api.profile())}catch(e){ElMessage.error(e.message||'加载数据失败')}}
-function openCourse(row){editing.value=!!row;Object.assign(courseForm,blankCourse(),row||{});courseDialog.value=true}
-async function submitCourse(){try{await courseFormRef.value.validate();if(editing.value)await api.updateCourse({...courseForm});else await api.addCourse({...courseForm});courseList.value=await api.courses();courseDialog.value=false;ElMessage.success('课程信息已保存')}catch(e){if(e!==false)ElMessage.error(e.message||'请检查表单内容')}}
-async function removeCourse(row){try{await ElMessageBox.confirm(`确定删除课程「${row.name}」吗？此操作不可撤销。`,'删除确认',{type:'warning',confirmButtonText:'确认删除',cancelButtonText:'取消'});await api.deleteCourse(row.id);courseList.value=await api.courses();ElMessage.success('课程已删除')}catch(e){if(e!=='cancel'&&e!=='close')ElMessage.error(e.message||'删除失败')}}
 function downloadCsv(name,rows){if(!rows.length){ElMessage.warning('暂无可导出的数据');return}const csv='\ufeff'+[Object.keys(rows[0]).join(','),...rows.map(r=>Object.values(r).map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(','))].join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);ElMessage.success('导出文件已生成')}
 function exportCourses(){downloadCsv('课程列表.csv',filteredCourses.value)}function exportScores(){downloadCsv('个人成绩单.csv',filteredScores.value)}
 async function saveProfile(){saving.value=true;try{await api.updateProfile({...profile});ElMessage.success('个人资料保存成功')}catch(e){ElMessage.error(e.message)}finally{saving.value=false}}

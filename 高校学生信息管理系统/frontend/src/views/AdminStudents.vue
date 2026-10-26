@@ -78,8 +78,13 @@
             <el-date-picker v-model="form.birthDate" type="date" value-format="YYYY-MM-DD" placeholder="请选择日期" />
           </el-form-item>
           <el-form-item label="所属班级" prop="classId">
-            <el-select v-model="form.classId" placeholder="请选择班级">
+            <el-select v-model="form.classId" placeholder="请选择班级" @change="onClassChange">
               <el-option v-for="item in classOptions" :key="item.id" :label="item.className" :value="item.id" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="选修课程" prop="courseIds">
+            <el-select v-model="form.courseIds" multiple filterable clearable collapse-tags collapse-tags-tooltip placeholder="选择该学生可见的课程">
+              <el-option v-for="item in courseOptions" :key="item.id" :label="`${item.courseName}${item.semester ? `（${item.semester}）` : ''}`" :value="item.id" />
             </el-select>
           </el-form-item>
           <el-form-item label="联系电话" prop="phone">
@@ -89,7 +94,7 @@
             <el-input v-model.trim="form.email" maxlength="100" placeholder="选填" />
           </el-form-item>
         </div>
-        <el-alert v-if="!editing" title="新增后系统将按接口约定自动创建学生登录账号。" type="info" :closable="false" show-icon />
+        <el-alert v-if="!editing" title="新增后系统将自动创建学生登录账号；课程仅显示在此处明确选中的内容。" type="info" :closable="false" show-icon />
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -103,6 +108,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { managementApi } from '../api/management.js'
+import { academicApi } from '../api/academic.js'
 
 const rows = ref([])
 const total = ref(0)
@@ -114,12 +120,13 @@ const exporting = ref(false)
 const dialogVisible = ref(false)
 const formRef = ref()
 const classOptions = ref([])
+const courseOptions = ref([])
 const editingId = ref(null)
 const editing = computed(() => editingId.value !== null)
 const filters = reactive({ keyword: '', classId: undefined })
 const initialForm = () => ({
   studentNo: '', name: '', gender: '男', birthDate: '', classId: undefined,
-  phone: '', email: '',
+  phone: '', email: '', courseIds: [],
 })
 const form = reactive(initialForm())
 const phoneValidator = (_rule, value, callback) => {
@@ -139,7 +146,23 @@ const rules = {
 }
 
 async function loadOptions() {
-  classOptions.value = await managementApi.classes()
+  const [classes, courses] = await Promise.all([
+    managementApi.classes(),
+    academicApi.courses({ page: 1, size: 100 }),
+  ])
+  classOptions.value = classes
+  courseOptions.value = courses?.list || []
+}
+
+// 默认跟随班级选课：取该班级开设的全部课程
+function classCourseIds(classId) {
+  return courseOptions.value
+    .filter((course) => Number(course.classId) === Number(classId))
+    .map((course) => Number(course.id))
+}
+
+function onClassChange(classId) {
+  form.courseIds = classCourseIds(classId)
 }
 
 async function loadStudents() {
@@ -180,6 +203,7 @@ async function openEditor(row) {
         ...details,
         classId: Number(details.classId),
         birthDate: details.birthDate || '',
+        courseIds: classCourseIds(details.classId),
       })
     } catch (error) {
       ElMessage.error(error.message || '学生详情加载失败')
@@ -210,8 +234,11 @@ async function saveStudent() {
       phone: form.phone,
       email: form.email,
     }
-    if (editing.value) await managementApi.updateStudent(editingId.value, payload)
-    else await managementApi.addStudent(payload)
+    const savedStudent = editing.value
+      ? await managementApi.updateStudent(editingId.value, payload)
+      : await managementApi.addStudent(payload)
+    const studentId = editing.value ? editingId.value : Number(savedStudent?.id)
+    if (studentId > 0) await managementApi.setStudentCourses(studentId, form.courseIds)
     ElMessage.success(editing.value ? '学生信息已更新' : '学生已新增')
     dialogVisible.value = false
     await loadStudents()

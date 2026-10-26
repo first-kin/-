@@ -22,6 +22,8 @@ struct Course
     string className;
     string semester;
     string courseTime;
+    string room;
+    int status = 1;  // 0 未开课 1 开课中 2 已结课
     string createTime;
 };
 
@@ -107,6 +109,31 @@ inline bool courseFromJson(const Json::Value &j, Course &c, string &err)
     if (j.isMember("courseTime") && j["courseTime"].isString())
         c.courseTime = j["courseTime"].asString();
 
+    if (j.isMember("room") && j["room"].isString())
+    {
+        c.room = j["room"].asString();
+        if (c.room.size() > 100)
+        {
+            err = "room(上课地点)长度不能超过 100";
+            return false;
+        }
+    }
+
+    if (j.isMember("status") && !j["status"].isNull())
+    {
+        if (!j["status"].isIntegral())
+        {
+            err = "status(课程状态)必须为整数 0/1/2";
+            return false;
+        }
+        c.status = j["status"].asInt();
+        if (c.status < 0 || c.status > 2)
+        {
+            err = "status(课程状态)只能是 0 未开课、1 开课中、2 已结课";
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -122,6 +149,8 @@ inline Json::Value courseToJson(const Course &c)
     j["className"] = c.className;
     j["semester"] = c.semester;
     j["courseTime"] = c.courseTime;
+    j["room"] = c.room;
+    j["status"] = c.status;
     j["createTime"] = c.createTime;
     return j;
 }

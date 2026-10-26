@@ -57,11 +57,21 @@ bool requireAnyRole(const HttpRequestPtr &req, function<void(const HttpResponseP
     return false;
 }
 
+int64_t teacherScopeFor(const HttpRequestPtr &req)
+{
+    if (api::currentRole(req) != "teacher")
+        return 0;
+    auto rows = api::db()->execSqlSync(
+        "SELECT id FROM teachers WHERE user_id = ? AND is_deleted = 0 LIMIT 1",
+        api::currentUid(req));
+    return rows.empty() ? -1 : rows[0]["id"].as<int64_t>();
+}
+
 } // namespace
 
 // 成绩管理控制器（C 部分）
 //   管理员：全部成绩的查看、录入、修改、统计、撤销
-//   教师  ：仅本人任教课程的成绩录入/修改/统计
+//   教师  ：仅本人任教课程的成绩查看、录入、修改和统计
 //   学生  ：仅本人成绩
 class ScoreController : public drogon::HttpController<ScoreController>
 {
@@ -72,6 +82,7 @@ public:
     ADD_METHOD_TO(ScoreController::statistics, "/api/scores/statistics", Get, "JwtFilter");
     ADD_METHOD_TO(ScoreController::history, "/api/scores/history", Get, "JwtFilter");
     ADD_METHOD_TO(ScoreController::save, "/api/scores", Post, "JwtFilter");
+    ADD_METHOD_TO(ScoreController::remove, "/api/scores/{1}", Delete, "JwtFilter");
     ADD_METHOD_TO(ScoreController::batchSave, "/api/scores/batch", Post, "JwtFilter");
     ADD_METHOD_TO(ScoreController::undo, "/api/scores/undo", Post, "JwtFilter");
     METHOD_LIST_END
@@ -82,24 +93,20 @@ public:
         if (!requireAnyRole(req, callback, {"admin", "teacher"}, "无权查看成绩列表"))
             return;
 
-        const string role = api::currentRole(req);
-        const int64_t uid = api::currentUid(req);
         const int64_t courseId = toInt64(req->getParameter("courseId"), 0);
         const int64_t studentId = toInt64(req->getParameter("studentId"), 0);
         const string keyword = req->getParameter("keyword");
         const int page = toInt(req->getParameter("page"), 1);
         const int size = toInt(req->getParameter("size"), 10);
 
-        // 教师只看自己任教课程的成绩：uid 是 users.id，需先查 teachers.id
-        int64_t teacherScope = 0;
-        if (role == "teacher")
+        const int64_t teacherScope = teacherScopeFor(req);
+        if (teacherScope < 0)
         {
-            auto rows = api::db()->execSqlSync(
-                "SELECT id FROM teachers WHERE user_id = ? AND is_deleted = 0 LIMIT 1", uid);
-            teacherScope = rows.empty() ? -1 : rows[0]["id"].as<int64_t>();
+            callback(api::toResponse(api::Result::error(api::E_FORBIDDEN, "未关联教师档案")));
+            return;
         }
-        callback(api::toResponse(
-            svc::ScoreService::list(courseId, studentId, keyword, page, size, teacherScope)));
+        callback(api::toResponse(svc::ScoreService::list(
+            courseId, studentId, keyword, page, size, teacherScope)));
     }
 
     // GET /api/scores/my?semester=2025-2026-1  （按登录用户取本人成绩）
@@ -127,7 +134,12 @@ public:
             callback(api::toResponse(api::Result::error(api::E_PARAM, "courseId 非法")));
             return;
         }
-        const int64_t teacherScope = (api::currentRole(req) == "teacher") ? api::currentUid(req) : 0;
+        const int64_t teacherScope = teacherScopeFor(req);
+        if (teacherScope < 0)
+        {
+            callback(api::toResponse(api::Result::error(api::E_FORBIDDEN, "未关联教师档案")));
+            return;
+        }
         callback(api::toResponse(svc::ScoreService::statistics(courseId, teacherScope)));
     }
 
@@ -159,8 +171,33 @@ public:
             callback(api::toResponse(api::Result::error(api::E_PARAM, err)));
             return;
         }
-        const int64_t teacherScope = (api::currentRole(req) == "teacher") ? api::currentUid(req) : 0;
+        const int64_t teacherScope = teacherScopeFor(req);
+        if (teacherScope < 0)
+        {
+            callback(api::toResponse(api::Result::error(api::E_FORBIDDEN, "未关联教师档案")));
+            return;
+        }
         callback(api::toResponse(svc::ScoreService::save(s, teacherScope)));
+    }
+
+    // DELETE /api/scores/{id}
+    void remove(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback,
+                int64_t id) const
+    {
+        if (!requireAnyRole(req, callback, {"admin", "teacher"}, "无权删除成绩"))
+            return;
+        if (id <= 0)
+        {
+            callback(api::toResponse(api::Result::error(api::E_PARAM, "id 非法")));
+            return;
+        }
+        const int64_t teacherScope = teacherScopeFor(req);
+        if (teacherScope < 0)
+        {
+            callback(api::toResponse(api::Result::error(api::E_FORBIDDEN, "未关联教师档案")));
+            return;
+        }
+        callback(api::toResponse(svc::ScoreService::remove(id, teacherScope)));
     }
 
     // POST /api/scores/batch  { courseId, items: [ { studentId, score, status, examTime }, ... ] }
@@ -203,7 +240,12 @@ public:
             items.push_back(s);
         }
 
-        const int64_t teacherScope = (api::currentRole(req) == "teacher") ? api::currentUid(req) : 0;
+        const int64_t teacherScope = teacherScopeFor(req);
+        if (teacherScope < 0)
+        {
+            callback(api::toResponse(api::Result::error(api::E_FORBIDDEN, "未关联教师档案")));
+            return;
+        }
         callback(api::toResponse(svc::ScoreService::batchSave(courseId, items, teacherScope)));
     }
 

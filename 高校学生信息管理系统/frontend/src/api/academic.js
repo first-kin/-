@@ -1,5 +1,6 @@
 import request from './request.js'
 import { useAuthStore } from '../stores/auth.js'
+import { getActivePinia } from 'pinia'
 
 const mock = import.meta.env?.VITE_USE_MOCK !== 'false'
 
@@ -23,11 +24,18 @@ const pageOf = (items, params = {}) => {
   return { list: clone(items.slice((page - 1) * size, page * size)), total: items.length, page, size }
 }
 const match = (item, keyword, fields) => !keyword || fields.some((field) => String(item[field] || '').toLowerCase().includes(String(keyword).toLowerCase()))
+const activeRole = () => getActivePinia() ? useAuthStore().role : ''
+const teacherOwnsCourse = (courseId) => {
+  const role = activeRole()
+  if (!role || role === 'admin') return true
+  return role === 'teacher' && courses.some((course) => course.id === Number(courseId) && course.teacherName === useAuthStore().name)
+}
 
 export const academicApi = {
   courses: async (params = {}) => {
     if (!mock) return request.get('/courses', { params })
-    const filtered = courses.filter((item) => match(item, params.keyword, ['courseName', 'teacherName']) && (!params.semester || item.semester === params.semester))
+    const role = activeRole()
+    const filtered = courses.filter((item) => (role !== 'teacher' || teacherOwnsCourse(item.id)) && match(item, params.keyword, ['courseName', 'teacherName']) && (!params.semester || item.semester === params.semester))
     return pageOf(filtered, params)
   },
   createCourse: async (data) => {
@@ -47,25 +55,44 @@ export const academicApi = {
     courses = courses.filter((item) => item.id !== Number(id))
   },
   scores: async (params = {}) => {
+    const role = activeRole()
+    if (role && !['admin', 'teacher'].includes(role)) throw new Error('无权查看成绩')
     if (!mock) {
-      const role = useAuthStore().role
       const query = { ...params, semester: params.semester || undefined }
       const result = role === 'student' ? await request.get('/scores/my', { params: query }) : await request.get('/scores', { params: query })
       return Array.isArray(result) ? { list: result, total: result.length } : result
     }
-    const filtered = scores.filter((item) => (!params.courseId || item.courseId === Number(params.courseId)) && (!params.studentId || item.studentId === Number(params.studentId)) && (!params.semester || courses.find((course) => course.id === item.courseId)?.semester === params.semester) && match(item, params.keyword, ['courseName', 'studentName', 'studentNo']))
+    const filtered = scores.filter((item) => (role !== 'teacher' || teacherOwnsCourse(item.courseId)) && (!params.courseId || item.courseId === Number(params.courseId)) && (!params.studentId || item.studentId === Number(params.studentId)) && (!params.semester || courses.find((course) => course.id === item.courseId)?.semester === params.semester) && match(item, params.keyword, ['courseName', 'studentName', 'studentNo']))
     return pageOf(filtered, params)
   },
   saveScore: async (data) => {
+    const role = activeRole()
+    if (role && !['admin', 'teacher'].includes(role)) throw new Error('无权录入成绩')
     if (!mock) return request.post('/scores', data)
     if (Number(data.status) === 0 && (data.score == null || Number(data.score) < 0 || Number(data.score) > 100)) throw new Error('成绩需在 0~100 之间')
     const course = courses.find((item) => item.id === Number(data.courseId))
-    const item = { ...data, id: Math.max(0, ...scores.map((score) => score.id)) + 1, courseId: Number(data.courseId), courseName: course?.courseName || '', studentId: Number(data.studentId), score: data.status === 0 ? Number(data.score) : (data.score ?? null) }
-    scores = [item, ...scores]
+    if (!course || !teacherOwnsCourse(data.courseId)) throw new Error('无权维护该课程的成绩')
+    const existing = scores.find((score) => score.courseId === Number(data.courseId) && score.studentId === Number(data.studentId))
+    const item = { ...data, id: existing?.id || Math.max(0, ...scores.map((score) => score.id)) + 1, courseId: Number(data.courseId), courseName: course.courseName, studentId: Number(data.studentId), score: Number(data.status) === 0 ? Number(data.score) : (data.score ?? null) }
+    scores = existing
+      ? scores.map((score) => score.id === existing.id ? item : score)
+      : [item, ...scores]
     return clone(item)
   },
+  deleteScore: async (id) => {
+    const role = activeRole()
+    if (role && !['admin', 'teacher'].includes(role)) throw new Error('无权删除成绩')
+    if (!mock) return request.delete(`/scores/${id}`)
+    const item = scores.find((score) => score.id === Number(id))
+    if (!item) throw new Error('成绩记录不存在')
+    if (!teacherOwnsCourse(item.courseId)) throw new Error('无权删除该课程的成绩')
+    scores = scores.filter((score) => score.id !== Number(id))
+  },
   statistics: async (courseId) => {
+    const role = activeRole()
+    if (role && !['admin', 'teacher'].includes(role)) throw new Error('无权查看成绩统计')
     if (!mock) return request.get('/scores/statistics', { params: { courseId } })
+    if (!teacherOwnsCourse(courseId)) throw new Error('无权查看该课程成绩统计')
     const values = scores.filter((item) => item.courseId === Number(courseId) && item.status === 0 && item.score != null).map((item) => Number(item.score))
     const count = (test) => values.filter(test).length
     return { courseId: Number(courseId), courseName: courses.find((item) => item.id === Number(courseId))?.courseName || '', avgScore: values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0, maxScore: values.length ? Math.max(...values) : 0, minScore: values.length ? Math.min(...values) : 0, passRate: values.length ? count((score) => score >= 60) / values.length : 0, distribution: [{ segment: '90-100', count: count((score) => score >= 90) }, { segment: '80-89', count: count((score) => score >= 80 && score < 90) }, { segment: '70-79', count: count((score) => score >= 70 && score < 80) }, { segment: '60-69', count: count((score) => score >= 60 && score < 70) }, { segment: '<60', count: count((score) => score < 60) }] }

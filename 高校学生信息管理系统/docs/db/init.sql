@@ -98,24 +98,40 @@ CREATE TABLE courses (
   course_name VARCHAR(100) NOT NULL,
   credit      DECIMAL(3,1) NOT NULL COMMENT '学分0.5~10',
   teacher_id  BIGINT UNSIGNED NULL COMMENT '授课教师',
-  class_id    BIGINT UNSIGNED NULL COMMENT '开设班级，该班学生可见此课程',
+  class_id    BIGINT UNSIGNED NULL COMMENT '课程所属班级信息',
   semester    VARCHAR(20)  NULL COMMENT '如2025-2026-1',
-  course_time VARCHAR(100) NULL COMMENT '上课时间地点描述',
+  course_time VARCHAR(100) NULL COMMENT '上课时间',
+  room        VARCHAR(100) NULL COMMENT '上课地点',
+  status      TINYINT      NOT NULL DEFAULT 1 COMMENT '0未开课 1开课中 2已结课',
   create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   update_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   is_deleted  TINYINT      NOT NULL DEFAULT 0,
-  UNIQUE KEY uk_course_name (course_name),
+  active_course_name VARCHAR(100) GENERATED ALWAYS AS
+    (CASE WHEN is_deleted = 0 THEN course_name ELSE NULL END) STORED,
+  UNIQUE KEY uk_course_name (active_course_name),
   KEY idx_course_teacher (teacher_id),
   KEY idx_course_class (class_id),
   CONSTRAINT fk_course_teacher FOREIGN KEY (teacher_id) REFERENCES teachers(id),
   CONSTRAINT fk_course_class FOREIGN KEY (class_id) REFERENCES classes(id)
 ) ENGINE=InnoDB COMMENT='课程表';
 
--- 8. 成绩表（学生-课程的M:N联系,依赖 students、courses）
+-- 8. 学生选课关联表：学生只能看到管理员明确分配的课程
+CREATE TABLE student_courses (
+  student_id BIGINT UNSIGNED NOT NULL,
+  course_id  BIGINT UNSIGNED NOT NULL,
+  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (student_id, course_id),
+  KEY idx_student_courses_course (course_id),
+  CONSTRAINT fk_student_courses_student FOREIGN KEY (student_id) REFERENCES students(id),
+  CONSTRAINT fk_student_courses_course FOREIGN KEY (course_id) REFERENCES courses(id)
+) ENGINE=InnoDB COMMENT='学生选课关联表';
+
+-- 9. 成绩表（学生-课程的M:N联系,依赖 students、courses）
 CREATE TABLE scores (
   id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   student_id  BIGINT UNSIGNED NOT NULL,
   course_id   BIGINT UNSIGNED NOT NULL,
+  usual_score DECIMAL(5,1) NULL COMMENT '平时成绩 0~100',
   score       DECIMAL(5,1) NULL COMMENT '0~100,NULL表示未录入',
   status      TINYINT      NOT NULL DEFAULT 0 COMMENT '0正常 1缺考 2缓考',
   exam_time   DATE         NULL COMMENT '考试日期',
@@ -127,7 +143,7 @@ CREATE TABLE scores (
   CONSTRAINT fk_score_course  FOREIGN KEY (course_id)  REFERENCES courses(id)
 ) ENGINE=InnoDB COMMENT='成绩表';
 
--- 9. 通知公告表
+-- 10. 通知公告表
 CREATE TABLE notices (
   id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   title        VARCHAR(200) NOT NULL,
@@ -140,7 +156,7 @@ CREATE TABLE notices (
   KEY idx_notice_pub (publisher_id)
 ) ENGINE=InnoDB COMMENT='通知公告表';
 
--- 10. 操作日志表
+-- 11. 操作日志表
 CREATE TABLE logs (
   id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id     BIGINT UNSIGNED NULL,

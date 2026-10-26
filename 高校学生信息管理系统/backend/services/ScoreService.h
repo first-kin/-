@@ -21,7 +21,11 @@ struct ScoreChange
     bool existed = false;  // 变更前是否已有成绩记录
     bool hadScore = false; // 变更前是否有分数
     double oldScore = 0.0;
+    bool hadUsual = false;  // 变更前是否有平时成绩
+    double oldUsualScore = 0.0;
     int oldStatus = 0;
+    string oldExamTime;
+    bool removed = false;
 };
 
 // 成绩业务层
@@ -43,6 +47,9 @@ public:
 
     // 录入或修改单条成绩（存在则更新）
     static api::Result save(const model::Score &s, int64_t teacherScope);
+
+    // 删除成绩记录；teacherScope > 0 时仅限该教师任教课程
+    static api::Result remove(int64_t id, int64_t teacherScope);
 
     // 批量录入（逐条保存，返回成功/失败明细）
     static api::Result batchSave(int64_t courseId, const vector<model::Score> &items,

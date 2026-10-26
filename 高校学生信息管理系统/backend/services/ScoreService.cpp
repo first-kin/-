@@ -28,11 +28,13 @@ double round2(double v)
 
 const char *kScoreSelect =
     "SELECT sc.id, sc.student_id, s.student_no, s.name AS student_name, "
-    "       sc.course_id, c.course_name, c.credit, sc.score, sc.status, "
+    "       sc.course_id, c.course_name, c.credit, t.name AS teacher_name, "
+    "       sc.usual_score, sc.score, sc.status, "
     "       DATE_FORMAT(sc.exam_time, '%Y-%m-%d') AS exam_time "
     "FROM scores sc "
     "JOIN students s ON sc.student_id = s.id "
-    "JOIN courses c ON sc.course_id = c.id ";
+    "JOIN courses c ON sc.course_id = c.id "
+    "LEFT JOIN teachers t ON c.teacher_id = t.id ";
 
 model::Score rowToScore(const drogon::orm::Row &row)
 {
@@ -43,7 +45,10 @@ model::Score rowToScore(const drogon::orm::Row &row)
     s.studentName = row["student_name"].isNull() ? "" : row["student_name"].as<string>();
     s.courseId = row["course_id"].as<int64_t>();
     s.courseName = row["course_name"].isNull() ? "" : row["course_name"].as<string>();
+    s.teacherName = row["teacher_name"].isNull() ? "" : row["teacher_name"].as<string>();
     s.credit = row["credit"].isNull() ? 0.0 : row["credit"].as<double>();
+    s.hasUsualScore = !row["usual_score"].isNull();
+    s.usualScore = s.hasUsualScore ? row["usual_score"].as<double>() : 0.0;
     s.hasScore = !row["score"].isNull();
     s.score = s.hasScore ? row["score"].as<double>() : 0.0;
     s.status = row["status"].as<int>();
@@ -111,11 +116,13 @@ api::Result ScoreService::myScores(int64_t userId, const string &semester)
 {
     const char *kSql =
         "SELECT sc.id, sc.student_id, s.student_no, s.name AS student_name, "
-        "       sc.course_id, c.course_name, c.credit, sc.score, sc.status, "
+        "       sc.course_id, c.course_name, c.credit, t.name AS teacher_name, "
+        "       sc.usual_score, sc.score, sc.status, "
         "       DATE_FORMAT(sc.exam_time, '%Y-%m-%d') AS exam_time "
         "FROM scores sc "
         "JOIN students s ON sc.student_id = s.id "
         "JOIN courses c ON sc.course_id = c.id "
+        "LEFT JOIN teachers t ON c.teacher_id = t.id "
         "WHERE s.user_id = ? AND s.is_deleted = 0 AND c.is_deleted = 0 "
         "AND (? = '' OR IFNULL(c.semester, '') = ?) "
         "ORDER BY c.semester DESC, sc.id DESC";
@@ -165,7 +172,7 @@ api::Result ScoreService::save(const model::Score &s, int64_t teacherScope)
 
         // 变更前状态：用于留痕与撤销
         auto old = client->execSqlSync(
-            "SELECT id, score, status FROM scores WHERE student_id = ? AND course_id = ?",
+            "SELECT id, usual_score, score, status, exam_time FROM scores WHERE student_id = ? AND course_id = ?",
             s.studentId, s.courseId);
 
         ScoreChange rec;
@@ -177,27 +184,32 @@ api::Result ScoreService::save(const model::Score &s, int64_t teacherScope)
             rec.scoreId = old[0]["id"].as<int64_t>();
             rec.hadScore = !old[0]["score"].isNull();
             rec.oldScore = rec.hadScore ? old[0]["score"].as<double>() : 0.0;
+            rec.hadUsual = !old[0]["usual_score"].isNull();
+            rec.oldUsualScore = rec.hadUsual ? old[0]["usual_score"].as<double>() : 0.0;
             rec.oldStatus = old[0]["status"].as<int>();
+            rec.oldExamTime = old[0]["exam_time"].isNull() ? "" : old[0]["exam_time"].as<string>();
         }
 
         // exam_time 为空时写 NULL，故使用 IF() 表达式
         if (s.hasScore)
         {
             client->execSqlSync(
-                "INSERT INTO scores (student_id, course_id, score, status, exam_time) "
-                "VALUES (?, ?, ?, ?, IF(? = '', NULL, ?)) "
-                "ON DUPLICATE KEY UPDATE score = VALUES(score), status = VALUES(status), "
-                "exam_time = VALUES(exam_time)",
-                s.studentId, s.courseId, s.score, s.status, s.examTime, s.examTime);
+                "INSERT INTO scores (student_id, course_id, usual_score, score, status, exam_time) "
+                "VALUES (?, ?, IF(? = 1, ?, NULL), ?, ?, IF(? = '', NULL, ?)) "
+                "ON DUPLICATE KEY UPDATE usual_score = VALUES(usual_score), score = VALUES(score), "
+                "status = VALUES(status), exam_time = VALUES(exam_time)",
+                s.studentId, s.courseId, s.hasUsualScore ? 1 : 0, s.usualScore,
+                s.score, s.status, s.examTime, s.examTime);
         }
         else
         {
             client->execSqlSync(
-                "INSERT INTO scores (student_id, course_id, score, status, exam_time) "
-                "VALUES (?, ?, NULL, ?, IF(? = '', NULL, ?)) "
-                "ON DUPLICATE KEY UPDATE score = NULL, status = VALUES(status), "
-                "exam_time = VALUES(exam_time)",
-                s.studentId, s.courseId, s.status, s.examTime, s.examTime);
+                "INSERT INTO scores (student_id, course_id, usual_score, score, status, exam_time) "
+                "VALUES (?, ?, IF(? = 1, ?, NULL), NULL, ?, IF(? = '', NULL, ?)) "
+                "ON DUPLICATE KEY UPDATE usual_score = VALUES(usual_score), score = NULL, "
+                "status = VALUES(status), exam_time = VALUES(exam_time)",
+                s.studentId, s.courseId, s.hasUsualScore ? 1 : 0, s.usualScore,
+                s.status, s.examTime, s.examTime);
         }
 
         // 压入修改历史栈（LIFO）
@@ -212,6 +224,51 @@ api::Result ScoreService::save(const model::Score &s, int64_t teacherScope)
     catch (const exception &e)
     {
         return api::Result::error(api::E_DB, string("成绩保存失败: ") + e.what());
+    }
+}
+
+api::Result ScoreService::remove(int64_t id, int64_t teacherScope)
+{
+    try
+    {
+        auto client = api::db();
+        auto rows = client->execSqlSync(
+            "SELECT sc.student_id, sc.course_id, sc.usual_score, sc.score, sc.status, sc.exam_time, c.teacher_id "
+            "FROM scores sc JOIN courses c ON c.id = sc.course_id WHERE sc.id = ?",
+            id);
+        if (rows.empty())
+            return api::Result::error(api::E_NOT_FOUND, "成绩记录不存在");
+
+        const auto &row = rows[0];
+        const int64_t courseTeacherId = row["teacher_id"].isNull()
+                                            ? 0
+                                            : row["teacher_id"].as<int64_t>();
+        if (teacherScope > 0 && courseTeacherId != teacherScope)
+            return api::Result::error(api::E_FORBIDDEN, "无权删除该课程的成绩");
+
+        ScoreChange rec;
+        rec.scoreId = id;
+        rec.studentId = row["student_id"].as<int64_t>();
+        rec.courseId = row["course_id"].as<int64_t>();
+        rec.existed = true;
+        rec.removed = true;
+        rec.hadScore = !row["score"].isNull();
+        rec.oldScore = rec.hadScore ? row["score"].as<double>() : 0.0;
+        rec.hadUsual = !row["usual_score"].isNull();
+        rec.oldUsualScore = rec.hadUsual ? row["usual_score"].as<double>() : 0.0;
+        rec.oldStatus = row["status"].as<int>();
+        rec.oldExamTime = row["exam_time"].isNull() ? "" : row["exam_time"].as<string>();
+
+        client->execSqlSync("DELETE FROM scores WHERE id = ?", id);
+        {
+            lock_guard<mutex> lock(g_historyMutex);
+            g_history.push(rec);
+        }
+        return api::Result::success(Json::Value(Json::objectValue), "成绩记录已删除");
+    }
+    catch (const exception &e)
+    {
+        return api::Result::error(api::E_DB, string("删除成绩失败: ") + e.what());
     }
 }
 
@@ -363,14 +420,22 @@ api::Result ScoreService::undoLast()
         auto client = api::db();
         if (rec.existed)
         {
-            if (rec.hadScore)
+            if (rec.removed)
                 client->execSqlSync(
-                    "UPDATE scores SET score = ?, status = ? WHERE id = ?",
-                    rec.oldScore, rec.oldStatus, rec.scoreId);
+                    "INSERT INTO scores (id, student_id, course_id, usual_score, score, status, exam_time) "
+                    "VALUES (?, ?, ?, IF(? = 1, ?, NULL), IF(? = 1, ?, NULL), ?, IF(? = '', NULL, ?))",
+                    rec.scoreId, rec.studentId, rec.courseId,
+                    rec.hadUsual ? 1 : 0, rec.oldUsualScore,
+                    rec.hadScore ? 1 : 0, rec.oldScore,
+                    rec.oldStatus, rec.oldExamTime, rec.oldExamTime);
             else
                 client->execSqlSync(
-                    "UPDATE scores SET score = NULL, status = ? WHERE id = ?",
-                    rec.oldStatus, rec.scoreId);
+                    "UPDATE scores SET usual_score = IF(? = 1, ?, NULL), "
+                    "       score = IF(? = 1, ?, NULL), status = ?, "
+                    "       exam_time = IF(? = '', NULL, ?) WHERE id = ?",
+                    rec.hadUsual ? 1 : 0, rec.oldUsualScore,
+                    rec.hadScore ? 1 : 0, rec.oldScore,
+                    rec.oldStatus, rec.oldExamTime, rec.oldExamTime, rec.scoreId);
         }
         else
         {
